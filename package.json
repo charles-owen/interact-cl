@@ -1,0 +1,19 @@
+{
+  "name": "interact-cl",
+  "version": "0.0.1",
+  "description": "CourseLib Interact! components",
+  "main": "index.js",
+  "keywords": [
+    "Education",
+    "Discussion Forum"
+  ],
+  "author": "Charles B. Owen",
+  "license": "MIT",
+  "dependencies": {
+    "console-cl": "^0.0.1",
+    "course-cl": "^0.0.1",
+    "dompurify": "^1.0.7",
+    "site-cl": "^0.0.1",
+    "users-cl": "^0.0.1"
+  }
+}
