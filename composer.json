@@ -19,6 +19,8 @@
       "type": "vcs",
       "url": "https://github.com/charles-owen/interact-cl.git"
     }
-  ]
+  ],
+  "require": {
+    "ezyang/htmlpurifier": "^4.10"
+  }
 }
-
