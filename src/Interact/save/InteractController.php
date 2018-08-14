@@ -238,6 +238,7 @@ class InteractController {
                 $users = new \Users($this->course);
                 $answeruser = $users->get_user_by_userid($answerer->answerer);
                 if($answeruser !== null) {
+                if($answeruser !== null) {
                     $discussion = new Discussion($this->course,
                         $answeruser,
                         $interaction->get_id(),

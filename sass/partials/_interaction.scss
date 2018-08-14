@@ -1,0 +1,66 @@
+div.cl-interaction {
+  position: relative;
+  margin-left: 270px;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  padding: 0 5px 0.1em 5px;
+
+
+  div.cl-options {
+    display: flex;
+    flex-direction: row;
+    margin: 1em 10px;
+
+    >div {
+      padding: 0 30px 0 0;
+
+      label {
+        display: block;
+      }
+    }
+  }
+
+  p.cl-summary {
+    label {
+      font-style: italic;
+    }
+
+    input {
+      font-style: normal;
+    }
+  }
+
+  p.cl-welcome {
+    margin: 0;
+    padding: 2em 5em;
+    font-size: 1.2em;
+  }
+
+  .link {
+    margin: 0;
+    padding: 0;
+    font-size: 11px;
+  }
+
+  .link span.role {
+    font-size: 90%;
+    font-style: italic;
+  }
+
+  .interaction form {
+    position: relative;
+
+  }
+
+  form p {
+     text-align: left;
+  }
+
+
+  .question-type input {
+    vertical-align: middle;
+  }
+
+}

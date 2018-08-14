@@ -1,0 +1,29 @@
+
+div.cl-interact-content {
+  padding: 0;
+
+  p.notice {
+    font-size: 0.85em;
+    border-top: 1px solid black;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto !important;
+  }
+
+  pre.code, figure img, img.figure, .rightbox, .centerbox,
+  .advice, .problem, .scenario, div.toggleblock {
+    @extend %shadow;
+    padding:8px;
+    border: 1px black solid;
+    overflow:auto;
+    max-width: none;
+    margin: 1em auto;
+  }
+
+  .primary { background: $primary; color:white; }
+  .seconda { background: $seconda; color:white; }
+  .secondb { background: $secondb; }
+  .comp {background: $comp; color: white; }
+}

@@ -10,6 +10,7 @@
   "author": "Charles B. Owen",
   "license": "MIT",
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^11.0.1",
     "console-cl": "^0.0.1",
     "course-cl": "^0.0.1",
     "dompurify": "^1.0.7",

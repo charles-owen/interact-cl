@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dataset>
+	<test_cl_site_user id="2" user="admin" email="admin@cse.msu.edu" name="Admin, Mr."
+			  role="A" />
+	<test_cl_site_user id="3" user="cbowen" email="cbowen@cse.msu.edu" name="Owen, Charles"
+			   role="U" />
+	<test_cl_site_user id="4" user="mowen" email="mowen@cse.msu.edu" name="Owen, Mary"
+			   role="U" />
+	<test_cl_site_user id="5" user="bob" email="bowen@cse.msu.edu" name="Parker, Bob"
+			   role="U" />
+	<test_cl_site_user id="7" user="sue" email="turner@cse.msu.edu" name="Turner, Sue"
+			   role="U" />
+	<test_cl_site_user id="14" user="arb" email="arb@cse.msu.edu" name="Arbitrary, Student"
+			   role="U" />
+	<test_cl_site_user id="15" user="axi" email="axi@cse.msu.edu" name="Axi, Who"
+			   role="U" />
+	<test_cl_site_user id="16" user="bart" email="bar@cse.msu.edu" name="Barton, Fin"
+			   role="U" />
+	<test_cl_site_user id="17" user="dart" email="dart@cse.msu.edu" name="Dartman, William"
+			   role="U" />
+	<test_cl_site_user id="18" user="mallow" email="mallow@cse.msu.edu" name="Mallow, Marsh"
+			   role="U" />
+	<test_cl_site_user id="19" user="incindy" email="incindy@cse.msu.edu" name="Incindy, Cindy"
+			   role="U" />
+	<test_cl_site_user id="20" user="mork" email="mork@cse.msu.edu" name="Quark, Mork"
+			   role="U" />
+	<test_cl_site_user id="21" user="gooddoc" email="gooddoc@cse.msu.edu" name="Goodwin, Doctor"
+			   role="U" />
+	<test_cl_site_user id="22" user="royrob" email="royrob@cse.msu.edu" name="Roy, Rob"
+			   role="U" />
+	<test_cl_site_user id="23" user="karth" email="karth@cse.msu.edu" name="Karthark, Rod"
+			   role="U"  />
+	<test_cl_site_user id="24" user="orway" email="orway@cse.msu.edu" name="Orway, Norway"
+			   role="G" />
+	<test_cl_site_user id="25" user="zulu" email="zulu@cse.msu.edu" name="Zulu, Tribes Of"
+			   role="G" />
+	<test_cl_site_user id="26" user="xray" email="xray@cse.msu.edu" name="Exray, Cynthia"
+			   role="G" />
+	<test_cl_site_user id="33" user="mallow33" email="mallow33@cse.msu.edu" name="Mallow, Marsh"
+					   role="U" />
+	<test_cl_site_user id="91" user="mallow91" email="mallow91@cse.msu.edu" name="Mallow, Marsh"
+					   role="U" />
+	<test_cl_site_user id="57" user="mallow57" email="mallow57@cse.msu.edu" name="Mallow, Marsh"
+					   role="U" />
+</dataset>

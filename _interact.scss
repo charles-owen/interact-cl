@@ -1,1 +1,8 @@
-@import 'sass/partials/all';
+@import '~site-cl/sass/modules/colors';
+
+@import 'sass/partials/interact';
+@import 'sass/partials/interactions';
+@import 'sass/partials/interaction';
+@import 'sass/partials/interaction_heading';
+@import 'sass/partials/interact_editor';
+@import 'sass/partials/interact_content';

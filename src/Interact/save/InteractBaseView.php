@@ -7,40 +7,14 @@
 namespace Interact;
 
 /**
- * Abstract base class is the base for derived Interact views
+ * Basic Interact
  *
  * This class maintains elements of the views in the Interact system that
  * are common. Actual instantiated object will be InteractView in the global
  * namespace.
  */
 class InteractBaseView extends InteractViewAux {
-	/**
-	 * Constructor
-	 * @param Course $course Course object
-	 * @param User $user User who is viewing
-	 * @param array|null $categories Array of categories or null to use user preferences categories.
-	 * @param null $sectionTag Optional section for an assignment/category
-	 */
-	public function __construct(\Course $course, \User $user, array $categories=null, $sectionTag=null) {
-	    parent::__construct($course, $user);
 
-	    $this->interact = new Interact();
-
-		$this->chooser = $categories === null;
-		$this->categories = $categories;
-		$this->sectionTag = $sectionTag;
-		if($this->chooser) {
-			$this->categories_set();
-		}
-
-		// Does the file interact.php exist in the courses directory?
-        //
-        $configFile = $course->get_rootdir() . "/course/interact.php";
-        $config  = @include $configFile;
-        if($config !== false && is_callable($config)) {
-            $config($this->interact);
-        }
-	}
 
     /**
      * Called when this auxilliary view is installed in a view
@@ -50,9 +24,6 @@ class InteractBaseView extends InteractViewAux {
         parent::install($view);
 
 
-
-        $libroot = $this->course->get_libroot();
-        $ajaxroot = $this->course->get_ajaxroot();
 
         $js = <<<HTML
 INTERACT.set_roots('$libroot', '$ajaxroot');
@@ -84,53 +55,7 @@ HTML;
         $view->js = $js;
     }
 
-	/**
-	 * Set the values of $this->categoryNames and $this->categoryActives based on
-	 * user preferences.
-	 */
-	protected function categories_set() {
-		/*
-		 * Collect up all possible categories based on the
-		 * standard categories and the assignment names
-		 */
-		$this->categoryNames = array();
-		foreach(\Interact\Interaction::standard_categories() as $key => $value) {
-			$this->categoryNames[$key] = $value['shortname'];
-		}
 
-		$assignments = $this->user->get_section()->get_assignments();
-		foreach($assignments->get_categories() as $category) {
-			foreach($category->get_assignments() as $assignment) {
-				$assignment->load();
-				$this->categoryNames[$assignment->get_tag()] = $assignment->get_shortname();
-			}
-		}
-
-		natcasesort($this->categoryNames);
-
-		/*
-		 * Determine the active categories from the user preferences
-		 */
-		$this->categoryActives = array();
-		$prefs = $this->user->get_preferences();
-		$categories = $prefs->get('interact_categories', array('all'));
-		$this->categories = $categories;
-
-		if(count($categories) == 1 && current($categories) === 'all') {
-			foreach($this->categoryNames as $key => $name) {
-				$this->categoryActives[$key] = true;
-			}
-		} else {
-			foreach($this->categoryNames as $key => $name) {
-				$this->categoryActives[$key] = false;
-			}
-
-			foreach($categories as $category) {
-				$this->categoryActives[$category] = true;
-			}
-		}
-
-	}
 
 
 	/**
@@ -739,11 +664,4 @@ HTML;
 		return "Student";
 	}
 
-	private $interact;
-
-	protected $chooser;  	///< true if we use the category chooser menu
-	protected $categories;  ///< Categories we will look at or null if none
-	protected $sectionTag;
-	protected $categoryNames = null;   ///< Array of all categories tag to name in name order
-	protected $categoryActives = null; ///< Array of category tag to active/chosen
 }

@@ -1,0 +1,239 @@
+$noresponse: #ddffff;   // Background for questions that have not been responded to
+$selected: #ddffdd;
+$noresponseselected: #bbffff;
+$bannerbackground: #18453B;
+
+div.cl-interact {
+  position: relative;
+  margin: 5px auto;
+  border: 1px solid black;
+  width: 100%;
+  max-width: 1000px;
+  min-width: 600px;
+  box-sizing: border-box;
+
+  //
+  // Banner bar that expands to make Interact!
+  //
+  .banner {
+    position: relative;
+    background-color: #18453B;
+    color: white;
+    padding: 3px 0.25rem 5px 10.5rem;
+    font-size: 1.3em;
+    margin: 0;
+    font-weight: normal;
+    border: 0;
+
+    a {
+      font-size: 12px;
+      padding-right: 3px;
+    }
+
+    // Tell how many questions and announcements there have been
+    .info {
+      font-style: normal;
+      font-size: 0.65em;
+    }
+
+    img {
+      vertical-align: middle;
+    }
+
+    .start, .ask {
+      position: absolute;
+      left: 0.25em;
+      top: 4px;
+      width: 10rem;
+      font-size: 12px;
+      color: black;
+    }
+
+    .start {
+      top: 5px;
+    }
+
+    .message {
+      font-size: 11px;
+      color: #ff8888;
+      font-style: italic;
+      padding-left: 20px;
+    }
+
+    .search {
+      position: absolute;
+      top: 1px;
+      right: 0.25rem;
+      color: black;
+
+      input {
+        position: relative;
+        border: 0;
+        height: 1.5em;
+        padding: 0 0.2em;
+        margin: 0;
+        font-size: 12px;
+        width: 15em;
+      }
+
+      button {
+        position: relative;
+        border: 0;
+        height: 1.5em;
+        padding: 0 0.25em;
+        margin: 0;
+        font-size: 12px;
+      }
+    }
+  }
+
+  div.cl-interact-body {
+    position: relative;
+    top: 0;
+    min-height: 600px;
+  }
+
+  p.closed {
+    text-align: center;
+    font-size: 0.9em;
+    font-style: italic;
+    color: #880088;
+    border-bottom: 1px solid black;
+    padding: 0.5em 0;
+    margin: 0;
+  }
+
+
+
+  p.inter-active {
+    background-color: #f15e32;
+    text-align: center;
+    margin: 0;
+    color: white; // #b7e6f8;
+    font-size: 0.8em;
+  }
+}
+
+.cl-interact .discuss {
+  border-bottom: 1px solid black;
+}
+
+.cl-interact .discuss .good {
+  font-weight: normal;
+  font-size: 0.8em;
+  float: none;
+  text-align: left;
+}
+
+.cl-interact .summary {
+  width: 50%;
+}
+
+.cl-interact .edits {
+  font-size: 0.8em;
+  font-style: italic;
+  color: #888;
+  margin-top: 0;
+  margin-bottom: 0;
+  text-align: right;
+}
+
+/*
+ * Discussions area
+ */
+
+.interact h3.discussions-banner {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  background-color: #18453B;
+  color: white;
+  font-weight: normal;
+  font-size: 13px;
+}
+
+.interact h4.discuss-heading {
+  margin: 3px 0 0 0;
+  font-size: 14px;
+}
+
+.interact .discuss-heading span.time {
+  float: right;
+  font-size: 12px;
+  font-weight: normal;
+  text-align: right;
+  padding-right: 5px;
+}
+
+.interact .discuss-heading span.role {
+  font-size: 0.9em;
+  font-style: italic;
+  font-weight: normal;
+}
+
+.interact .discuss-form {
+  padding: 0;
+  border-bottom: 1px solid black;
+}
+
+.interact .discuss-form form {
+  margin: 0;
+  padding: 0;
+}
+
+.interact .discuss-form form > p {
+  position: relative;
+  margin: 5px 0;
+  padding: 0;
+}
+
+.interact .discuss-form textarea {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: white;
+}
+
+/*
+ * Console
+ */
+.interact-console {
+  span.msg {
+    color: red;
+    font-weight: normal;
+    font-style: italic;
+    font-size: 0.6em;
+  }
+
+  p, h3 {
+    padding-left: 30px;
+    text-align: left;
+  }
+
+  h3 {
+    margin-bottom: 0;
+    font-style: italic;
+  }
+
+  .staff-email {
+    margin-top: 1em;
+
+    p {
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+
+    p.first {
+      margin-top: 0.75em;
+    }
+  }
+}
+
+p.interact_link {
+  margin: 0.25em 0 0 0;
+  text-align: right;
+  font-size: 0.85em;
+  max-width: 47em !important;
+  font-style: italic;
+}

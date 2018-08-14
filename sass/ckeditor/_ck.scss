@@ -1,0 +1,22 @@
+.ck.ck-toolbar {
+  background: #f0f0f0;
+  padding: 0;
+}
+
+.ck.ck-dropdown__button {
+  border: 1px solid #808080;
+}
+
+.ck.ck-button, .ck.ck-button.ck-button_with-text, a.ck.ck-button.ck-button_with-text {
+  padding-top: 0;
+  padding-bottom: 0;
+  min-height: 2em;
+}
+
+.ck.ck-icon {
+  height: 1.5em;
+}
+
+.ck-editor__editable {
+  min-height: 100px;
+}

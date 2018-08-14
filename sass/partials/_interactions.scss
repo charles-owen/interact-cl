@@ -1,0 +1,86 @@
+/*
+ * Interactions area (left)
+ */
+
+div.cl-interactions {
+  position: absolute;
+  width: 270px;
+  background-color: white;
+  border-right: 1px solid black;
+  padding: 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  overflow-y: scroll;
+
+  /*
+   * A single Interaction in the collection of interactions
+   */
+  div.cl-interact-item {
+    position: relative;
+    border-bottom: 1px solid black;
+    height: 85px;
+    padding: 5px 5px;
+    overflow: hidden;
+    background-color: white;
+
+    h3 {
+      font-size: 12px;
+      margin: 0;
+      padding: 0;
+    }
+
+    img {
+      float: left;
+      padding-right: 3px;
+    }
+
+    .link {
+      font-size: 10px;
+    }
+
+    .link span {
+      float: right;
+      font-size: 10px;
+    }
+
+    p {
+      margin: 0;
+      padding: 0;
+      font-size: 11px;
+    }
+
+    p.tag {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      padding: 0 0 0 5px;
+      font-size: 10px;
+      font-style: italic;
+      overflow: hidden;
+      background-color: inherit;
+      width: 100%;
+    }
+  }
+
+  .noresponse {
+    background-color: $noresponse;
+  }
+
+  .item.selected {
+    background-color: $selected;
+  }
+
+  .noresponse.selected {
+    background-color: $noresponseselected;
+  }
+
+  // More link at end of list of interactions
+  .more {
+    margin: 0;
+    font-size: 12px;
+    text-align: center;
+    font-style: italic;
+  }
+
+}

@@ -1,0 +1,283 @@
+<?php
+/** @file
+ * Unit tests for the class Interacts
+ * @cond 
+ */
+require_once __DIR__ . '/init.php';
+require_once __DIR__ . '/cls/InteractDatabaseTestBase.php';
+
+use CL\Interact\Interacts;
+
+class InteractsTest extends InteractDatabaseTestBase {
+	/**
+	 * @return PHPUnit_Extensions_Database_DataSet_IDataSet
+	 */
+	public function getDataSet() {
+		return $this->dataSets(['interact.xml']);
+	}
+
+	public function ensureTables() {
+		$this->ensureTable(new Interacts($this->site->db));
+	}
+
+	public function test() {
+
+	}
+
+//    public function test_count() {
+//        global $course;
+//        $section = $course->get_section("001");
+//
+//        $interacts = new \Interact\Interacts($course);
+//        $counts = $interacts->counts($section, array('general'), null);
+//        $this->assertEquals(0, $counts[\Interact\Interaction::Announcement]);
+//        $this->assertEquals(0, $counts[\Interact\Interaction::Question]);
+//
+//        $this->loadup();
+//
+//        $counts = $interacts->counts($section, array('general'));
+//        $this->assertEquals(1, $counts[\Interact\Interaction::Announcement]);
+//        $this->assertEquals(3, $counts[\Interact\Interaction::Question]);
+//
+//        $counts = $interacts->counts($section, array('general'), 'subsection');
+//        $this->assertEquals(1, $counts[\Interact\Interaction::Announcement]);
+//        $this->assertEquals(1, $counts[\Interact\Interaction::Question]);
+//
+//        $counts = $interacts->counts($section, array('general', 'design1'));
+//        $this->assertEquals(1, $counts[\Interact\Interaction::Announcement]);
+//        $this->assertEquals(4, $counts[\Interact\Interaction::Question]);
+//
+//        $counts = $interacts->counts($section);
+//        $this->assertEquals(1, $counts[\Interact\Interaction::Announcement]);
+//        $this->assertEquals(4, $counts[\Interact\Interaction::Question]);
+//
+//        $counts = $interacts->counts($section, array(4 => 'all'));
+//        $this->assertEquals(1, $counts[\Interact\Interaction::Announcement]);
+//        $this->assertEquals(4, $counts[\Interact\Interaction::Question]);
+//
+//        $section = $course->get_section("002");
+//        $counts = $interacts->counts($section, array('general'), null);
+//        $this->assertEquals(0, $counts[\Interact\Interaction::Announcement]);
+//        $this->assertEquals(0, $counts[\Interact\Interaction::Question]);
+//
+//    }
+//
+//    public function test_add() {
+//        global $course;
+//
+//        $users = new Users($course);
+//        $user = $users->get_user(5);
+//
+//        $time = strtotime('2015-01-12 14:02:11');
+//
+//        $interaction = new \Interact\Interaction($course,
+//            $user,
+//            'general',
+//            null,
+//            \Interact\Interaction::Announcement,
+//            false,
+//            false);
+//
+//        $html = '<p>This is a simple test</p><p class="someclass">Line 2</p>';
+//        $interaction->set_html($html);
+//
+//        $time = time() + 1000;
+//
+//        $interacts = new \Interact\Interacts($course);
+//        $id = $interacts->add($interaction, $time);
+//
+//        $interaction2 = $interacts->get($id);
+//
+//        $this->assertEquals($interaction->get_html(), $interaction2->get_html());
+//        $this->assertEquals($interaction->get_summary(), $interaction2->get_summary());
+//        $this->assertEquals($interaction->is_pin(), $interaction2->is_pin());
+//        $this->assertEquals($interaction->is_private(), $interaction2->is_private());
+//        $this->assertEquals($interaction->get_user_id(), $interaction2->get_user_id());
+//        $this->assertEquals($interaction->get_user_name(), $interaction2->get_user_name());
+//        $this->assertEquals($interaction->get_assign_tag(), $interaction2->get_assign_tag());
+//        $this->assertEquals($interaction->get_section_tag(), $interaction2->get_section_tag());
+//        $this->assertEquals($time, $interaction2->get_time());
+//    }
+//
+//    public function test_iterator() {
+//        $this->loadup();
+//
+//        global $course;
+//
+//        $interacts = new \Interact\Interacts($course);
+//
+//        /*
+//         * Tests
+//         */
+//        $users = new Users($course);
+//        $user5 = $users->get_user(5);
+//        $user7 = $users->get_user(7);
+//
+//        $interacts->select($user5, array("general"), null, null);
+//        $current = $interacts->get_current();
+//        $this->assertNotNull($current);
+//
+//        $this->assertEquals("Question 2", $current->get_summary());
+//
+//        $this->assertTrue($interacts->advance());
+//
+//        $current = $interacts->get_current();
+//        $this->assertNotNull($current);
+//
+//        $this->assertEquals("Question 3", $current->get_summary());
+//
+//        $this->assertTrue($interacts->advance());
+//
+//        $current = $interacts->get_current();
+//        $this->assertNotNull($current);
+//
+//        $this->assertEquals("Question 1", $current->get_summary());
+//
+//        $this->assertFalse($interacts->advance());
+//        $this->assertNull($interacts->get_current());
+//
+//        /*
+//         * See if User 7 sees his post
+//         */
+//        $interacts->select($user7, array("general"), null, null);
+//        $current = $interacts->get_current();
+//        $this->assertNotNull($current);
+//        $this->assertEquals("Question 2", $current->get_summary());
+//
+//        $this->assertTrue($interacts->advance());
+//        $current = $interacts->get_current();
+//        $this->assertNotNull($current);
+//        $this->assertEquals("Question 4", $current->get_summary());
+//
+//        /*
+//         * Search for multiple categories
+//         */
+//        $interacts->select($user5, array("general", "design1"), null, null);
+//        $current = $interacts->get_current();
+//        $this->assertNotNull($current);
+//        $this->assertEquals("Question 2", $current->get_summary());
+//
+//        $this->assertTrue($interacts->advance());
+//        $current = $interacts->get_current();
+//        $this->assertEquals("Question 5", $current->get_summary());
+//
+//        /*
+//         * Search for all
+//         */
+//        $interacts->select($user5);
+//        $current = $interacts->get_current();
+//        $this->assertNotNull($current);
+//        $this->assertEquals("Question 2", $current->get_summary());
+//
+//        $this->assertTrue($interacts->advance());
+//        $current = $interacts->get_current();
+//        $this->assertEquals("Question 5", $current->get_summary());
+//
+//        $interacts->select($user5, array(99 => 'all'));
+//        $current = $interacts->get_current();
+//        $this->assertNotNull($current);
+//        $this->assertEquals("Question 2", $current->get_summary());
+//
+//        $this->assertTrue($interacts->advance());
+//        $current = $interacts->get_current();
+//        $this->assertEquals("Question 5", $current->get_summary());
+//    }
+//
+//    private function loadup() {
+//        global $course;
+//
+//        $interacts = new \Interact\Interacts($course);
+//
+//        $users = new Users($course);
+//        $user5 = $users->get_user(5);
+//        $user7 = $users->get_user(7);
+//
+//        $time1 = strtotime('2015-01-12 14:02:11');
+//        $time2 = $time1 + 10001;
+//        $time3 = $time2 + 5667;
+//        $time4 = $time3 + 155;
+//        $time5 = $time4 + 155;
+//
+//        /*
+//         * Normal post
+//         */
+//        $interaction = new \Interact\Interaction($course,
+//            $user5,
+//            'general',
+//            'subsection',
+//            \Interact\Interaction::Question,
+//            false,
+//            false);
+//
+//        $html = '<p>This is a simple test</p><p class="someclass">Line 2</p>';
+//        $interaction->set_html($html);
+//        $interaction->set_summary("Question 1");
+//
+//        $interacts->add($interaction, $time1);
+//
+//        /*
+//         * Pinned
+//         */
+//        $interaction = new \Interact\Interaction($course,
+//            $user5,
+//            'general',
+//            'subsection',
+//            \Interact\Interaction::Announcement,
+//            true,
+//            false);
+//        $interaction->set_html($html);
+//        $interaction->set_summary("Question 2");
+//
+//        $interacts->add($interaction, $time2);
+//
+//        /*
+//         * Normal
+//         */
+//        $interaction = new \Interact\Interaction($course,
+//            $user5,
+//            'general',
+//            null,
+//            \Interact\Interaction::Question,
+//            false,
+//            false);
+//        $interaction->set_html($html);
+//        $interaction->set_summary("Question 3");
+//
+//        $interacts->add($interaction, $time3);
+//
+//
+//        /*
+//         * private/user 7
+//         */
+//        $interaction = new \Interact\Interaction($course,
+//            $user7,
+//            'general',
+//            null,
+//            \Interact\Interaction::Question,
+//            false,
+//            true);
+//        $interaction->set_html($html);
+//        $interaction->set_summary("Question 4");
+//
+//        $interacts->add($interaction, $time4);
+//
+//        /*
+//         * Different Category
+//         */
+//        $interaction = new \Interact\Interaction($course,
+//            $user5,
+//            'design1',
+//            null,
+//            \Interact\Interaction::Question,
+//            false,
+//            false);
+//        $interaction->set_html($html);
+//        $interaction->set_summary("Question 5");
+//
+//        $interacts->add($interaction, $time5);
+//
+//
+//    }
+}
+
+/// @endcond
