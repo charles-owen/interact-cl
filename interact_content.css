@@ -1,0 +1,34 @@
+div.cl-interact-content pre.code, div.cl-interact-content figure img, div.cl-interact-content img.figure, div.cl-interact-content .rightbox, div.cl-interact-content .centerbox,
+div.cl-interact-content .advice, div.cl-interact-content .problem, div.cl-interact-content .scenario, div.cl-interact-content div.toggleblock {
+  -moz-box-shadow: 3px 3px 8px #ccc;
+  -webkit-box-shadow: 3px 3px 8px #ccc;
+  box-shadow: 3px 3px 8px #ccc; }
+
+div.cl-interact-content {
+  padding: 0; }
+  div.cl-interact-content p.notice {
+    font-size: 0.85em;
+    border-top: 1px solid black; }
+  div.cl-interact-content img {
+    max-width: 100%;
+    height: auto !important; }
+  div.cl-interact-content pre.code, div.cl-interact-content figure img, div.cl-interact-content img.figure, div.cl-interact-content .rightbox, div.cl-interact-content .centerbox,
+  div.cl-interact-content .advice, div.cl-interact-content .problem, div.cl-interact-content .scenario, div.cl-interact-content div.toggleblock {
+    padding: 8px;
+    border: 1px black solid;
+    overflow: auto;
+    max-width: none;
+    margin: 1em auto; }
+  div.cl-interact-content .primary {
+    background: #00723f;
+    color: white; }
+  div.cl-interact-content .seconda {
+    background: #00909e;
+    color: white; }
+  div.cl-interact-content .secondb {
+    background: #fcaf17; }
+  div.cl-interact-content .comp {
+    background: #c41425;
+    color: white; }
+
+/*# sourceMappingURL=interact_content.css.map */

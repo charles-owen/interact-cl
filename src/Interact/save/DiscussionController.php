@@ -10,19 +10,7 @@ namespace Interact;
  * Controller class for the Interaction system discussions
  */
 class DiscussionController {
-	/**
-	 * Constructor
-	 * @param \Course $course Course object
-	 * @param \User $user Current user
-	 * @param $time Timestamp
-	 * @param \Email|null $email Email object or null for default email component
-	 */
-    public function __construct(\Course $course, \User $user, $time, \Email $email=null) {
-        $this->course = $course;
-        $this->user = $user;
-        $this->time = $time;
-		$this->email = $email;
-    }
+
 
 	/**
 	 * Handle a post
@@ -58,65 +46,6 @@ class DiscussionController {
         return $this->error("Invalid Request");
     }
 
-    private function error($msg) {
-        return json_encode(array('ok'=>false, 'msg'=>$msg));
-    }
-
-    /**
-     * Handle posting of a new interaction discussion item.
-     * @param $post $_POST
-     * @return string JSON
-     */
-    private function execute_post($post) {
-        $html = self::sanitize($post['discuss']);
-
-        /* Indicate the user is no longer editing an interaction */
-        $interactive = new InterActive($this->course);
-        $interactive->delete($this->user);
-
-        if(strlen($html) == 0) {
-            return $this->error("You must provide some discussion!");
-        }
-
-        $interactId = $post['interactid'];
-        $interacts = new Interacts($this->course);
-
-        $discussion = new Discussion($this->course,
-            $this->user,
-            $interactId,
-            $this->time);
-
-        $discussion->set_html($html);
-
-        $discussions = new Discussions($this->course);
-        $id = $discussions->add($discussion, $this->time);
-        $discussion->set_id($id);
-
-        $view = new \Interact\DiscussionView($this->course, $this->user, $interactId);
-        $result = $view->discussion_to_send($discussion, $this->time);
-
-        $interaction = $interacts->get($interactId);
-
-        if($interaction === null) {
-            return $this->error("Interaction is no longer available");
-        }
-
-        /*
-         * User is now following this interaction
-         */
-        $interFollows = new InterFollows($this->course);
-        $interFollows->set_following($this->user->get_id(), $interactId, InterFollows::FOLLOWING);
-
-		$email = new InteractEmail($this->course, $this->user, $this->email);
-		$email->new_discussion($interaction, $discussion);
-
-        $view = new \InteractView($this->course, $this->user);
-        $result['img'] = $view->follow_image(true);
-        $result['interaction'] = $interaction->to_array($this->user);
-
-        $result['ok']  = true;
-        return json_encode($result);
-    }
 
 
     /**
@@ -232,16 +161,6 @@ class DiscussionController {
         return null;
     }
 
-    private static function sanitize($str) {
-        // Only allow certain tags (no scripts for example)
-        $str = strip_tags($str, '<code><span><div><label><a><br><p><b><i><del><strike><u><img><video><audio><iframe><param><blockquote><mark><cite><small><ul><ol><li><hr><dl><dt><dd><sup><sub><big><pre><code><figure><figcaption><strong><em><table><tr><td><th><tbody><thead><tfoot><h1><h2><h3><h4><h5><h6>');
-
-        // HTML purifier cleans possible attribute-based exploits from the HTML
-        $config = \HTMLPurifier_Config::createDefault();
-		$config->set('Cache.DefinitionImpl', null);
-        $purifier = new \HTMLPurifier($config);
-        return $purifier->purify($str);
-    }
 
     /**
      * Delete a discussion item
@@ -279,5 +198,4 @@ class DiscussionController {
     private $course;
     private $user;
     private $time;
-	private $email;
 }

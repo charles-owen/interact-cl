@@ -67,8 +67,6 @@
       mounted() {
           this.user = this.$store.state.user.user;
           this.staff = this.user.atLeast(Member.STAFF);
-          this.staff = false;
-          console.log(this.staff);
       },
       methods: {
           submit() {

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <dataset>
+	<test_cl_site_member id="7" userid="2" semester="FS18" section="799" role="A" created="2018-07-14" />
 	<test_cl_site_member id="10" userid="4" semester="FS18" section="799" role="R" created="2018-07-14" />
 	<test_cl_site_member id="22" userid="5" semester="FS18" section="799" role="T" created="2018-07-06" />
 	<test_cl_site_member id="35" userid="16" semester="FS18" section="799" role="T" created="2018-07-06" />

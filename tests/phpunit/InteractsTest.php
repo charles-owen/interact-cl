@@ -6,23 +6,132 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/cls/InteractDatabaseTestBase.php';
 
+use CL\Users\User;
+use CL\Course\Member;
 use CL\Interact\Interacts;
+use CL\Interact\Interaction;
+use CL\Site\Test\ServerMock;
+use CL\Course\Members;
+use CL\Users\Users;
+use CL\Interact\InteractApi;
+use CL\Interact\InterFollows;
+use CL\Course\Section;
+use CL\Interact\Discussions;
 
 class InteractsTest extends InteractDatabaseTestBase {
 	/**
 	 * @return PHPUnit_Extensions_Database_DataSet_IDataSet
 	 */
 	public function getDataSet() {
-		return $this->dataSets(['interact.xml']);
+		return $this->dataSets(['interact.xml', 'interfollow.xml', 'discussion.xml',
+			'member-many.xml', 'user-many.xml']);
 	}
 
 	public function ensureTables() {
 		$this->ensureTable(new Interacts($this->site->db));
+		$this->ensureTable(new Members($this->site->db));
+		$this->ensureTable(new Users($this->site->db));
+		$this->ensureTable(new InterFollows($this->site->db));
+		$this->ensureTable(new Discussions($this->site->db));
 	}
 
-	public function test() {
+	public function test_summaries() {
+		$members = new Members($this->site->db);
+		$member22 = $members->getAsUser(22);
+		$member35 = $members->getAsUser(35);
+		$admin = $members->getAsUser(10);
 
+		$interacts = new Interacts($this->site->db);
+
+		$time1 = time() + 10010;
+
+		$interaction = new Interaction();
+		$interaction->user = $member22;
+		$interaction->assignTag = 'step1';
+		$interaction->sectionTag = null;
+		$interaction->type = Interaction::QUESTION;
+		$interaction->pin = false;
+		$interaction->private = false;
+		$interaction->summary = 'Iteraction 1';
+		$interaction->message = '<p>This is Interaction 1</p>';
+		$interaction->time = $time1;
+		$interaction->created = $time1;
+
+		$id = $interacts->add($interaction);
+
+		$result = $interacts->summaries([]);
+		$this->assertCount(1, $result);
+		$this->assertEquals($id, $result[0]->id);
+
+		$time2 = $time1 + 1000;
+		$time = $time2;
+		for($i=2; $i<=5; $i++) {
+			switch(rand(1, 3)) {
+				case 1:
+					$user = $member22;
+					break;
+
+				case 2:
+					$user = $member35;
+					break;
+
+				case 3:
+					$user = $admin;
+					break;
+			}
+
+			$this->createInteraction($user, $time, $i);
+			$time += 1000;
+		}
+
+		$result = $interacts->summaries(['before'=>$time2]);
+		$this->assertCount(1, $result);
+
+		$result = $interacts->summaries(['after'=>$time2]);
+		$this->assertCount(3, $result);
+
+		// Add a pinned
+		$time1a = $time1 + 500;
+		$this->createInteraction($admin, $time1a, 'pinned', true);
+
+		$result = $interacts->summaries([]);
+		$this->assertCount(6, $result);
+		$this->assertTrue($result[0]->pin);
+
+		// Add a private post
+		$time2a = $time1 + 1500;
+		$this->createInteraction($member22, $time1a, 'pinned', false, true);
+		$result = $interacts->summaries([]);
+		$this->assertCount(7, $result);
+
+		// Member 22 can see if
+		$result = $interacts->summaries(['privateMember'=>22]);
+		$this->assertCount(7, $result);
+
+		// Member 35 cannot
+		$result = $interacts->summaries(['privateMember'=>35]);
+		$this->assertCount(6, $result);
 	}
+
+	private function createInteraction(User $user, $time, $number, $pin=false, $private=false) {
+		$interacts = new Interacts($this->site->db);
+
+		$interaction = new Interaction();
+		$interaction->user = $user;
+		$interaction->assignTag = 'step1';
+		$interaction->sectionTag = null;
+		$interaction->type = Interaction::QUESTION;
+		$interaction->pin = $pin;
+		$interaction->private = $private;
+		$interaction->summary = "Iteraction $number";
+		$interaction->message = "<p>This is Interaction $number</p>";
+		$interaction->time = $time;
+		$interaction->created = $time;
+
+		return $interacts->add($interaction);
+	}
+
+
 
 //    public function test_count() {
 //        global $course;

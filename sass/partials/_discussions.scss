@@ -1,0 +1,43 @@
+/*
+ * Discussions area
+ */
+
+div.cl-discussions {
+
+  >h3 {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    background-color: #18453B;
+    color: white;
+    font-weight: normal;
+    font-size: 13px;
+  }
+
+  div.cl-discuss-form {
+    padding: 0 $padding;
+    border-bottom: 1px solid black;
+
+    >h4 {
+      margin: 1em 0 0 0;
+      font-size: 14px;
+    }
+
+    form {
+
+      >p {
+        position: relative;
+        margin: 5px 0;
+        padding: 0;
+      }
+    }
+
+    textarea {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: white;
+    }
+  }
+}

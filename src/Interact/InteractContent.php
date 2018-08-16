@@ -8,6 +8,8 @@ namespace CL\Interact;
 
 use CL\Users\User;
 use CL\Site\MetaData;
+use CL\Course\Member;
+use CL\Site\Site;
 
 /**
  * Base class for Interact system content: interaction and discussion items
@@ -22,11 +24,33 @@ use CL\Site\MetaData;
  * @endcond
  */
 abstract class InteractContent {
-    /**
+	/// Maximum length for message summaries in characters
+	const SummarizeMax = 1000;
+
+	/**
      * Constructor
      */
-    public function __construct() {
-    	$this->metaData = new MetaData();
+    public function __construct($row = null, $prefix='') {
+    	if($row !== null) {
+		    $user = new User($row, 'user_');
+		    $member = new Member($row, 'member_');
+		    $user->member = $member;
+		    $this->user = $user;
+		    if(isset($row["{$prefix}message"])) {
+			    $this->message = $row["{$prefix}message"];
+		    }
+
+		    $this->time = strtotime($row["{$prefix}time"]);
+		    $this->id = $row["{$prefix}id"];
+
+		    if($row["{$prefix}metadata"] !== null) {
+			    $this->metaData = new MetaData(null, $row["{$prefix}metadata"]);
+		    } else {
+			    $this->metaData = new MetaData();
+		    }
+	    } else {
+		    $this->metaData = new MetaData();
+	    }
     }
 
 	/**
@@ -108,31 +132,65 @@ abstract class InteractContent {
 	}
 
 
-//    /**
-//     * Create a name as it is going to be displayed for users
-//     * @param \User $user The user who is viewing
-//     * @return string The name
-//     */
-//    public function display_name(\User $user) {
-//        if($user->get_id() == $this->memberId) {
-//            return "Me";
-//        }
-//
-//        switch($this->userRole) {
-//            case \User::INSTRUCTOR:
-//                return \User::to_displayname($this->userName) . ', <span class="role">Instructor</span>';
-//
-//            case \USER::STAFF:
-//                return \User::to_displayname($this->userName) . ', <span class="role">Staff</span>';
-//        }
-//
-//        if($user->is_staff() || \User::role_is_staff($this->get_user_role())) {
-//            return \User::to_displayname($this->get_user_name());
-//        }
-//
-//        return "Student";
-//    }
-//
+	/**
+	 * Get a summarized version of the message
+	 * @return string HTML/truncated
+	 */
+	public function summarize() {
+		$summary = strip_tags($this->message);
+
+		// Since the data from the clients is UTF8, just truncating
+		// the string can lead to a broken multibyte character at
+		// the end, which breaks JSON encoding. This ensures that
+		// that cannot happen.
+		return utf8_encode(substr(utf8_decode($summary), 0, self::SummarizeMax));
+	}
+
+
+	/**
+	 * Create client data when in summary mode.
+	 * @param Site $site The Site object
+	 * @param User $user The current user
+	 * @return array results
+	 */
+	public function data(Site $site, User $user) {
+		$data = [
+			'id'=>$this->id,
+			'time'=>$this->time,
+			'by'=>$this->displayName($user),
+			'byRole'=>$this->user->role
+		];
+
+		return $data;
+	}
+
+
+    /**
+     * Create a name as it is going to be displayed for users
+     * @param User $user The user who is viewing
+     * @return string The name
+     */
+    public function displayName(User $user) {
+	    //
+	    // Only staff see all "by" indications
+	    //
+	    $by = $this->user->displayName;
+	    if($this->user->id == $user->id) {
+		    $by = 'Me';
+	    }
+
+	    if(!$user->atLeast(Member::STAFF) && !$this->user->atLeast(Member::STAFF)) {
+		    // This was created by other than staff and the user is not staff
+		    if($this->user->id == $user->id) {
+			    $by = 'Me';
+		    } else {
+			    $by = 'Student';
+		    }
+	    }
+
+        return $by;
+    }
+
 //	/**
 //	 * Display a name and role
 //	 * @param $name Name to display
@@ -361,5 +419,5 @@ abstract class InteractContent {
     private $time = 0;      // Content timestamp
 	private $metaData;
 
-	private $messsage = '';
+	private $message = '';  // Interaction or discussion message body
 }

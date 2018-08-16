@@ -9,8 +9,11 @@ namespace CL\Interact;
 use CL\Users\User;
 
 class Interact {
-    /// Preferences key for determining if staff member receives Interact email
-    const RECEIVE_MAIL = "interact-receive-mail";
+	/// Member MetaData category
+	const INTERACT_CATEGORY = 'interact';
+
+    /// MetaData key for determining if staff member receives Interact email
+    const RECEIVE_MAIL = "email";
 
     /**
      * Add a canned text item to Interact
@@ -43,6 +46,8 @@ class Interact {
 		return $purifier->purify($str);
 	}
 
+
+
 //    /**
 //     * Generate JavasScript necessary for this configuration
 //     */
@@ -63,8 +68,8 @@ class Interact {
 
     /**
      * Convert a date/time to the format we display
-     * @param $time Time to convert
-     * @param $currentTime The current time
+     * @param int $time Time to convert
+     * @param int $currentTime The current time
      * @param bool $short If true, display a shorter version
      * @return string Converted time
      */

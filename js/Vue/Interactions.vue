@@ -1,19 +1,27 @@
 <template>
   <div class="cl-interactions">
-    <interact-item v-for="item in interactions" :item="item" :key="item.id"></interact-item>
+    <interaction-summary v-for="item in summaries.summaries" :selected="item === selected" :item="item" :key="item.id" @select="select"></interaction-summary>
+    <div v-if="summaries.more" class="cl-more"><a @click.prevent="more">...more...</a></div>
   </div>
 </template>
 
 <script>
-  import InteractItemVue from './InteractItem.vue';
+  import InteractionSummaryVue from './InterationSummary.vue';
 
   export default {
-      props: ['interactions'],
+      props: ['summaries', 'selected'],
       components: {
-          interactItem: InteractItemVue
+          interactionSummary: InteractionSummaryVue
       },
       mounted() {
-          console.log(this.interactions);
+      },
+      methods: {
+          more() {
+              this.summaries.fetch();
+          },
+          select(summary) {
+              this.$emit('select', summary);
+          }
       }
   }
 </script>

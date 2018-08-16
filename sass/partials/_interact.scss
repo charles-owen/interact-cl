@@ -87,6 +87,15 @@ div.cl-interact {
     }
   }
 
+
+  div.cl-menu {
+    float: right;
+
+    img {
+      vertical-align: top;
+    }
+  }
+
   div.cl-interact-body {
     position: relative;
     top: 0;
@@ -138,33 +147,6 @@ div.cl-interact {
   text-align: right;
 }
 
-/*
- * Discussions area
- */
-
-.interact h3.discussions-banner {
-  border: 0;
-  margin: 0;
-  padding: 0;
-  text-align: center;
-  background-color: #18453B;
-  color: white;
-  font-weight: normal;
-  font-size: 13px;
-}
-
-.interact h4.discuss-heading {
-  margin: 3px 0 0 0;
-  font-size: 14px;
-}
-
-.interact .discuss-heading span.time {
-  float: right;
-  font-size: 12px;
-  font-weight: normal;
-  text-align: right;
-  padding-right: 5px;
-}
 
 .interact .discuss-heading span.role {
   font-size: 0.9em;
@@ -172,28 +154,11 @@ div.cl-interact {
   font-weight: normal;
 }
 
-.interact .discuss-form {
-  padding: 0;
-  border-bottom: 1px solid black;
-}
-
 .interact .discuss-form form {
   margin: 0;
   padding: 0;
 }
 
-.interact .discuss-form form > p {
-  position: relative;
-  margin: 5px 0;
-  padding: 0;
-}
-
-.interact .discuss-form textarea {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background-color: white;
-}
 
 /*
  * Console

@@ -6,6 +6,8 @@
 
 namespace CL\Interact;
 
+use CL\Course\Members;
+
 /**
  * Table class implementing the table interact
  *
@@ -30,15 +32,15 @@ class Interacts extends \CL\Tables\Table {
 
 		$query = <<<SQL
 CREATE TABLE IF NOT EXISTS `$this->tablename` (
-  id         int(10) NOT NULL AUTO_INCREMENT, 
+  id         int(11) NOT NULL AUTO_INCREMENT, 
   memberid   int(11) NOT NULL, 
   assigntag  varchar(30) NOT NULL, 
   sectiontag varchar(30), 
   created    datetime NOT NULL, 
   time       datetime NOT NULL, 
   type       char(1) NOT NULL, 
-  pin        bit(1) NOT NULL, 
-  private    bit(1) NOT NULL, 
+  pin        tinyint NOT NULL, 
+  private    tinyint NOT NULL, 
   summary    varchar(100) NOT NULL, 
   message    mediumtext NOT NULL, 
   metadata   mediumtext, 
@@ -76,8 +78,6 @@ SQL;
 
     public function __get($key) {
         switch($key) {
-            case "limit":
-                return $this->limit;
 
             default:
                 return parent::__get($key);
@@ -99,8 +99,6 @@ insert into $this->tablename(memberid, assigntag, sectiontag, created, time,
 values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 SQL;
 
-        $timeStr =
-
 		$a = [$interaction->user->member->id,
 			$interaction->assignTag,
 			$interaction->sectionTag,
@@ -120,6 +118,118 @@ SQL;
 
         $interaction->id = $pdo->lastInsertId();
         return $interaction->id;
+    }
+
+    public function summaries($params = []) {
+	    $where = new \CL\Tables\TableWhere($this);
+	    $discussions = new Discussions($this->config);
+	    $discussionsTable = $discussions->tablename;
+
+	    if(isset($params['semester'])) {
+		    $where->append('member.semester=?', $params['semester']);
+	    }
+
+	    if(isset($params['section'])) {
+		    $where->append('member.section=?', $params['section']);
+	    }
+
+	    if(isset($params['sectionId'])) {
+		    $where->append('member.section=?', $params['sectionId']);
+	    }
+
+	    if(isset($params['before'])) {
+		    $where->append('interact.time<?', $this->timeStr($params['before']));
+	    }
+
+	    if(isset($params['after'])) {
+		    $where->append('interact.time>?', $this->timeStr($params['after']));
+	    }
+
+	    if(isset($params['privateMember'])) {
+			$where->append('(private=0 or member.id=?)', $params['privateMember'], \PDO::PARAM_INT);
+	    }
+
+	    $fields = <<<FIELDS
+interact.id as id, assigntag, sectiontag, 
+interact.created as created, interact.time as time, interact.type as type,
+pin, private, interact.summary as summary, interact.message as message,
+interact.metadata as metadata, count(discussion.id) as discussions
+FIELDS;
+
+	    $members = new Members($this->config);
+	    $sql = $members->memberUserJoinSQL($fields, false, 'user_', 'member_');
+
+	    $sql .= <<<SQL
+join $this->tablename interact
+on member.id=interact.memberid
+left join $discussionsTable discussion
+on interact.id=discussion.interactid
+$where->where
+group by interact.id
+order by pin desc, time desc 
+SQL;
+
+	    if(isset($params['limit'])) {
+		    $sql .= "\nlimit ?";
+		    $where->append(null, intval($params['limit']), \PDO::PARAM_INT);
+	    }
+
+	    // echo $where->sub_sql($sql);
+	    $result = $where->execute($sql);
+	    $summaries = [];
+	    foreach($result->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+	    	$summary = new Interaction($row);
+	    	$summaries[] = $summary;
+	    }
+
+
+	    return $summaries;
+    }
+
+
+	/**
+	 * Get a single Interaction
+	 * @param int $id ID for the interaction
+	 * @return Interaction|null Interaction found or null if does not exist
+	 */
+    public function get($id) {
+	    $where = new \CL\Tables\TableWhere($this);
+	    $discussions = new Discussions($this->config);
+	    $discussionsTable = $discussions->tablename;
+
+	    $where->append('interact.id=?', $id, \PDO::PARAM_INT);
+
+	    $fields = <<<FIELDS
+interact.id as id, assigntag, sectiontag, 
+interact.created as created, interact.time as time, interact.type as type,
+pin, private, interact.summary as summary, interact.message as message,
+interact.metadata as metadata, count(discussion.id) as discussions
+FIELDS;
+
+	    $members = new Members($this->config);
+	    $sql = $members->memberUserJoinSQL($fields, false, 'user_', 'member_');
+
+	    $sql .= <<<SQL
+join $this->tablename interact
+on member.id=interact.memberid
+left join $discussionsTable discussion
+on interact.id=discussion.interactid
+$where->where
+group by interact.id
+order by pin desc, time desc 
+SQL;
+
+
+	    // echo $where->sub_sql($sql);
+	    $result = $where->execute($sql);
+	    $row = $result->fetch(\PDO::FETCH_ASSOC);
+	    if($row === false || $row === null) {
+	    	return null;
+	    }
+
+	    $interaction = new Interaction($row);
+
+	    return $interaction;
     }
 
 
@@ -211,53 +321,7 @@ SQL;
 //            $interaction->to_xml(),
 //            $interaction->get_id()));
 //    }
-//
-//	/**
-//	 * Get a single Interaction
-//	 * @param $id ID for the interaction
-//	 * @return Interaction|null Interaction found or null if does not exist
-//	 */
-//    public function get($id) {
-//        $pdo = $this->pdo();
-//
-//        $users = new \Users($this->course);
-//        $usersTable = $users->get_tablename();
-//        $discussions = new Discussions($this->course);
-//        $discussionsTable = $discussions->get_tablename();
-//
-//        $sql = <<<SQL
-//select interact.id as id, user.id as userid, assigntag, sectiontag, interact.time as time,
-//type, pin, private, summary, message, name, role, count(discussion.discuss) as discussions
-//from $this->tablename interact
-//join $usersTable user
-//on interact.userid=user.id
-//left join $discussionsTable discussion
-//on interact.id = discussion.interactid
-//where interact.id=?
-//group by interact.id
-//order by pin desc, time desc
-//SQL;
-//
-///*        $sql = <<<SQL
-//select interact.id as id, userid, assigntag, sectiontag, time,
-//type, pin, private, summary, message, name, role, 0 as discussions
-//from $this->tablename interact
-//join $usersTable user
-//on interact.userid=user.id
-//where interact.id=?
-//SQL;*/
-//
-//        $stmt = $pdo->prepare($sql);
-//        $stmt->execute(array($id));
-//        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
-//
-//        if($row === false) {
-//            return null;
-//        }
-//
-//        return $this->interaction_from_row($row);
-//    }
-//
+
 //    private function interaction_from_row($row) {
 //        $interaction = new Interaction($this->course,
 //            null,
@@ -417,41 +481,10 @@ SQL;
 //            echo $exception->getMessage();
 //        }
 //    }
-//
-//    /**
-//     * Get the current interaction
-//     * @return Interaction|null Current result or null if none. Array with key for each field
-//     */
-//    public function get_current() {
-//        return $this->current;
-//    }
-//
-//    /**
-//     * Advance to the next interaction
-//     * @return bool True if another thought exists
-//     */
-//    public function advance() {
-//        if(($row = $this->stmt->fetch(\PDO::FETCH_ASSOC))) {
-//            $this->current = $this->interaction_from_row($row);
-//            return true;
-//        } else {
-//            // Nothing to fetch
-//            $this->current = null;
-//            return false;
-//        }
-//    }
-//
-//    /**
-//     * Close the interaction iteration
-//     */
-//    public function close() {
-//        $this->stmt->closeCursor();
-//    }
+
 
 //    private $stmt = null;
 //    private $current = null;
 
 
-    /// Limit on number of responses
-    private $limit = self::DEFAULT_LIMIT;
 }

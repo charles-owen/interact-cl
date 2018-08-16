@@ -469,55 +469,6 @@ HTML;
 		return json_encode(array('ok' => true, 'html' => $html, 'edit' => $edit));
 	}
 
-	/**
-	 * Construct an attribution line for an interaction
-	 * @param \Interact\Interaction $interaction The interaction we are interested in
-	 * @return string Attribution
-	 */
-	public function attribution(\Interact\Interaction $interaction, $email=false) {
-		$assignTag = $interaction->get_assign_tag();
-		if($assignTag === null || $assignTag === '') {
-			return '';
-		}
-
-		$assignment = $this->user->get_assignment($assignTag);
-		if($assignment !== null) {
-			$assignment->load();
-			$attr = $assignment->get_shortname();
-
-			$sectionTag = $interaction->get_section_tag();
-
-			if($sectionTag !== null && $sectionTag !== '') {
-				if($assignment instanceof \Step\Step) {
-					$section = $assignment->get_section($sectionTag);
-					if($section !== null) {
-						if(!$email) {
-							$url = $this->course->get_libroot() . '/step/stepsection.php?step=' .
-								$assignment->get_tag() . '&section=' . $sectionTag;
-
-							$attr = '<a href="' . $url . '" target="INTERACT_STEP">' .
-								$attr . "/" . $assignment->get_section($sectionTag)->get_name() .
-								'</a>';
-						} else {
-							$attr = $attr . "/" . $assignment->get_section($sectionTag)->get_name();
-						}
-					}
-				}
-			}
-
-			return $attr;
-		}
-
-		switch($assignTag) {
-			case 'general':
-				return "General Course Information";
-
-			case 'test':
-				return "Test Messages";
-		}
-
-		return $assignTag;
-	}
 
 	/**
 	 * Create the display HTML for the right side Interaction display.

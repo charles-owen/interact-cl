@@ -8,12 +8,12 @@ require_once __DIR__ . '/cls/InteractDatabaseTestBase.php';
 
 use CL\Course\Member;
 use CL\Interact\Interacts;
-use CL\Course\Test\DummyMember;
 use CL\Site\Test\ServerMock;
 use CL\Course\Members;
 use CL\Users\Users;
 use CL\Interact\InteractApi;
 use CL\Interact\InterFollows;
+use CL\Course\Section;
 
 class InteractApiTest extends InteractDatabaseTestBase {
 
@@ -32,6 +32,11 @@ class InteractApiTest extends InteractDatabaseTestBase {
 	}
 
 	public function test_api() {
+		$this->site->server = 'https://whatever.edu';
+		$course = $this->site->course;
+		$course->define('test', 'Test Course');
+		$course->add_section('FS18', '799', Section::Normal);
+
 		$members = new Members($this->site->db);
 		$member22 = $members->getAsUser(22);
 		$member35 = $members->getAsUser(35);
@@ -51,7 +56,10 @@ class InteractApiTest extends InteractDatabaseTestBase {
 		$this->site->users->user = $member22;
 		$ret = $api->apiDispatch($this->site, $server, ['interaction'], [], $time1);
 
-		echo "\n$ret\n";
+		//print_r($server->email);
+
+		$this->assertContains('New interaction @1 in the CSE999',
+			$server->email->log[0]['body']);
 
 		$interacts = new Interacts($this->site->db);
 		$sql = <<<SQL
@@ -115,6 +123,35 @@ SQL;
 //
 //		$quiz3 = $sessions->get($token);
 //		$this->assertNull($quiz3);
+	}
+
+	public function test_send_all() {
+		$this->site->server = 'https://whatever.edu';
+		$course = $this->site->course;
+		$course->define('test', 'Test Course');
+		$course->add_section('FS18', '799', Section::Normal);
+
+		$members = new Members($this->site->db);
+		$member22 = $members->getAsUser(22);
+		$member35 = $members->getAsUser(35);
+		$admin = $members->getAsUser(7);
+
+		$server = new ServerMock();
+		$server->setServer('REQUEST_URI', '/api/interact/interaction');
+		$server->setServer('REQUEST_METHOD', 'POST');
+		$server->setPost('type', 'Q');
+		$server->setPost('assign', 'step1');
+		$server->setPost('summary', 'A Question Summary');
+		$server->setPost('message', '<p>A Question Message<script>alert()</script></p>');
+		$server->setPost('sendall', true);
+		$time1 = time() + 1234;
+
+		$api = new InteractApi();
+
+		$this->site->users->user = $admin;
+		$ret = $api->apiDispatch($this->site, $server, ['interaction'], [], $time1);
+
+		$this->assertCount(5, $server->email->log);
 	}
 
 }

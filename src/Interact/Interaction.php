@@ -7,7 +7,10 @@
 /// Classes associated with the Interact! system
 namespace CL\Interact;
 
+use CL\Course\Member;
 use CL\Users\User;
+use CL\Course\Course;
+use CL\Site\Site;
 
 /**
  * Class that represents a single interaction
@@ -24,38 +27,27 @@ use CL\Users\User;
  * @endcond
  */
 class Interaction extends InteractContent {
-    /// User question expecting an answer
+
+	/// User question expecting an answer
     const QUESTION = 'Q';
 
     /// Announcement
     const ANNOUNCEMENT = 'A';
 
-    /// Maximum length for message summaries in characters
-    const SummarizeMax = 1000;
 
-//	/**
-//	 * Constructor
-//	 * @param User $user User who created the interaction
-//	 * @param string $assignTag Assignment/Category tag
-//	 * @param string $sectionTag Optional section tag
-//	 * @param string $type Type of interaction (constants above)
-//	 * @param boolean $pin Pinned interaction
-//	 * @param boolean $private Private interaction
-//	 * @param int $time Time the interaction was created
-//	 */
-//    public function __construct(User $user=null, $assignTag, $sectionTag=null,
-//                                $type, $pin, $private, $time=0) {
-//        parent::__construct($user, $time);
-//
-//        $this->assignTag = $assignTag;
-//        $this->sectionTag = $sectionTag;
-//        $this->type = $type;
-//        $this->pin = $pin;
-//        $this->private = $private;
-//    }
+    public function __construct($row = null, $prefix='') {
+		parent::__construct($row, $prefix);
 
-    public function __construct() {
-		parent::__construct();
+		if($row !== null) {
+			$this->created = strtotime($row["{$prefix}created"]);
+			$this->assignTag = $row["{$prefix}assigntag"];
+			$this->sectionTag = $row["{$prefix}sectiontag"];
+			$this->type = $row["{$prefix}type"];
+			$this->pin = +$row["{$prefix}pin"] == 1;
+			$this->private = +$row["{$prefix}private"] == 1;
+			$this->summary = $row["{$prefix}summary"];
+			$this->discussionCnt = $row["{$prefix}discussions"];
+		}
     }
 
     /**
@@ -90,6 +82,9 @@ class Interaction extends InteractContent {
 
 	        case 'created':
 	        	return $this->created;
+
+	        case 'discussions':
+	        	return $this->discussions;
 
             default:
                 return parent::__get($property);
@@ -136,6 +131,11 @@ class Interaction extends InteractContent {
 				$this->created = $value;
 				break;
 
+			case 'discussions':
+				$this->discussions = $value;
+				$this->discussionCnt = count($this->discussions);
+				break;
+
 			default:
 				parent::__set($property, $value);
 				break;
@@ -156,6 +156,109 @@ class Interaction extends InteractContent {
         $this->private = isset($post['private']);
         $this->type = $post['type'] === 'Announcement' ? Interaction::Announcement : Interaction::Question;
     }
+
+	/**
+	 * Construct an attribution line for an interaction.
+	 *
+	 * This is an indication of the assignment and optional section like Step 1/Task 1
+	 * @return string Attribution
+	 */
+	public function attribution(Site $site, User $user, $email=false) {
+		$course = $site->course;
+		$assignTag = $this->assignTag;
+		if($assignTag === null || $assignTag === '') {
+			return '';
+		}
+
+		$section = $course->get_section_for($user);
+		$assignment = $section->get_assignment($assignTag);
+		if($assignment !== null) {
+			$assignment->load();
+			$attr = $assignment->shortName;
+
+			$sectionTag = $this->sectionTag;
+			if($sectionTag !== null && $sectionTag !== '') {
+				if($assignment instanceof \CL\Step\Step) {
+					$stepSection = $assignment->get_section($sectionTag);
+
+					if($stepSection !== null) {
+						if(!$email) {
+							$url = $site->server . $stepSection->url;
+
+							$attr = '<a href="' . $url . '" target="INTERACT_STEP">' .
+								$attr . "/" . $stepSection->name .
+								'</a>';
+						} else {
+							$attr = $attr . "/" . $stepSection->name;
+						}
+					}
+				}
+			}
+
+			return $attr;
+		}
+
+		switch($assignTag) {
+			case 'general':
+				return "General Course Information";
+
+			case 'test':
+				return "Test Messages";
+		}
+
+		return $assignTag;
+	}
+
+	/**
+	 * Create client data when in summary mode.
+	 * @param Site $site The Site object
+	 * @param User $user The current user
+	 * @return array results
+	 */
+	public function summaryData(Site $site, User $user) {
+		return [
+			'id'=>$this->id,
+			'pin'=>$this->pin,
+			'time'=>$this->time,
+			'summarized'=>$this->summarize(),
+			'summary'=>$this->summary,
+			'discussionsCnt'=>$this->discussionCnt,
+			'attribution'=>$this->attribution($site, $user),
+			'closed'=>false,
+			'type'=>$this->type
+		];
+	}
+
+	/**
+	 * Create client data when in summary mode.
+	 * @param Site $site The Site object
+	 * @param User $user The current user
+	 * @return array results
+	 */
+	public function data(Site $site, User $user) {
+		$data = parent::data($site, $user);
+
+		$discussions = [];
+		foreach($this->discussions as $discussion) {
+			$discussions[] = $discussion->data($site, $user);
+		}
+
+		$data1 = [
+			'pin'=>$this->pin,
+			'private'=>$this->private,
+			'created'=>$this->created,
+			'summarized'=>$this->summarize(),
+			'summary'=>$this->summary,
+			'discussionsCnt'=>$this->discussionCnt,
+			'attribution'=>$this->attribution($site, $user),
+			'closed'=>false,
+			'type'=>$this->type,
+			'message'=>$this->message,
+			'discussions'=>$discussions
+		];
+
+		return array_merge($data, $data1);
+	}
 
 //	/**
 //	 * Set the interaction summary text
@@ -238,19 +341,6 @@ class Interaction extends InteractContent {
 //        return $this->id;
 //    }
 
-	/**
-	 * Get a summarized version of the interaction HTML
-	 * @return string HTML/truncated
-	 */
-    public function summarize() {
-        $summary = strip_tags($this->html);
-
-        // Since the data from the clients is UTF8, just truncating
-        // the string can lead to a broken multibyte character at
-        // the end, which breaks JSON encoding. This ensures that
-        // that cannot happen.
-        return utf8_encode(substr(utf8_decode($summary), 0, self::SummarizeMax));
-    }
 
 //	/**
 //	 * Set the number of discussions about this interaction
@@ -376,6 +466,6 @@ class Interaction extends InteractContent {
     private $pin;
     private $private;
     private $summary = '';
-    private $numDiscussions = 0;
-	private $closed = false;
+    private $discussionCnt = 0;
+    private $discussions = [];
 }

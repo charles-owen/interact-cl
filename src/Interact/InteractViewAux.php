@@ -37,9 +37,9 @@ class InteractViewAux extends ViewAux {
 	    $this->categoriesSet($view->section);
 
 		//
-	    // Does the file interact.php exist in the courses directory?
+	    // Does the file interact.php exist in the config directory?
 	    //
-	    $configFile = $view->site->root . "/course/interact.php";
+	    $configFile = $view->site->root . '/' . $view->site->config . "/interact.php";
 	    $config  = @include $configFile;
 	    if($config !== false && is_callable($config)) {
 		    $config($this->interact);

@@ -14,15 +14,16 @@ div.cl-interactions {
   overflow-y: scroll;
 
   /*
-   * A single Interaction in the collection of interactions
+   * A single Interaction summary in the collection of interactions
    */
-  div.cl-interact-item {
+  div.cl-interact-summary {
     position: relative;
     border-bottom: 1px solid black;
     height: 85px;
     padding: 5px 5px;
     overflow: hidden;
     background-color: white;
+    cursor: pointer;
 
     h3 {
       font-size: 12px;
@@ -50,7 +51,7 @@ div.cl-interactions {
       font-size: 11px;
     }
 
-    p.tag {
+    p.cl-attribution {
       position: absolute;
       bottom: 0;
       left: 0;
@@ -63,24 +64,24 @@ div.cl-interactions {
     }
   }
 
-  .noresponse {
-    background-color: $noresponse;
-  }
-
-  .item.selected {
-    background-color: $selected;
-  }
-
-  .noresponse.selected {
-    background-color: $noresponseselected;
-  }
-
   // More link at end of list of interactions
-  .more {
+  div.cl-more {
     margin: 0;
     font-size: 12px;
     text-align: center;
     font-style: italic;
   }
 
+
+  .noresponse {
+    background-color: $noresponse;
+  }
+
+  .noresponse.selected {
+    background-color: $noresponseselected;
+  }
+
+  div.cl-interact-summary.cl-selected {
+    background-color: $selected;
+  }
 }
