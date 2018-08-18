@@ -59,9 +59,9 @@ class InteractPlugin extends \CL\Site\Plugin {
 		if($object instanceof Router) {
 			$router = $object;
 
-			$router->addRoute(['interact'], function(Site $site, Server $server, array $params, array $properties, $time) {
+			$router->addRoute(['interact', '*'], function(Site $site, Server $server, array $params, array $properties, $time) {
 				$view = new InteractView($site, $server, $time);
-				return $view->whole();
+				return $view->vue();
 			});
 
 			$router->addRoute(['api', 'interact', '*'], function(Site $site, Server $server, array $params, array $properties, $time) {
@@ -76,6 +76,28 @@ class InteractPlugin extends \CL\Site\Plugin {
 <img src="$root/vendor/cl/interact/img/linkbutton.png" width="100" height="25" alt="Interact! System"></a></p>
 HTML;
 			});
+		} else if($object instanceof \CL\Course\Assignment) {
+			$object->extend('use_interact', function(\CL\Course\Assignment $assignment, $args) {
+				$assignment->addProperty('interact', 'true');
+			});
+		} else if($object instanceof \CL\Course\AssignmentView) {
+			if($object->assignment->hasProperty('interact')) {
+				$sectionTag = ($object instanceof \CL\Step\StepSectionView) ?
+					$object->sectionTag : null;
+
+				$viewAux = new InteractViewAux([$object->tag], $sectionTag);
+				$object->add_aux($viewAux);
+				$object->beforeFooter = $viewAux->present();
+
+				$object->extend('interact_link', function(\CL\Course\AssignmentView $view, $args) {
+					$root = $view->root;
+					return <<<HTML
+<p class="cl-interact-link"><a href="#cl-interact"><img src="$root/vendor/cl/interact/img/link.png" width="82" height="16" alt="Interact!"> for this assignment</a></p>
+HTML;
+				});
+			}
+
+
 		} else if($object instanceof ConsoleView) {
 			$object->addJS('interact');
 		}

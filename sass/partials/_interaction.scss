@@ -1,4 +1,13 @@
 div.cl-interaction {
   padding: 0 $padding;
   border-bottom: 1px solid black;
+
+  div.cl-menu {
+    padding-top: 3px;
+  }
+
+  p.cl-attribution {
+    margin: 0 0 1em 0;
+    font-size: 0.95em;
+  }
 }

@@ -1,8 +1,9 @@
 <template>
   <div class="cl-discuss-form">
+    <mask-vue :mask="mask">Communicating with server...</mask-vue>
     <h4 class="discuss-heading">Contribute to the discussion</h4>
     <form method="post" @submit.prevent="submit">
-      <interact-editor v-model="text" :discussion="true"></interact-editor>
+      <component ref="editor" :is="editor" v-model="text" :discussion="true"></component>
       <p><input type="submit" value="Post"></p>
     </form>
   </div>
@@ -10,32 +11,47 @@
 
 <script>
   import EditorVue from './Editor.vue';
+  import MaskVue from 'site-cl/js/Vue/Mask.vue';
+  import {Interaction} from '../Models/Interaction';
 
   export default {
       props: ['interaction'],
       data: function() {
           return {
-              text: ''
+              text: '',
+              mask: false,
+              editor: EditorVue
           }
       },
       components: {
-          interactEditor: EditorVue
+          maskVue: MaskVue
+      },
+      mounted() {
+      	console.log(EditorVue);
       },
       methods: {
           submit() {
               let params = {
                 message: this.text
               }
+
+              this.mask = true;
+
               Site.api.post('/api/interact/discuss/' + this.interaction.id, params)
                   .then((response) => {
+                      this.mask = false;
                       if (!response.hasError()) {
-              console.log(response);
+  	                      const interaction = new Interaction(response.getData('interaction').attributes);
+                          this.$emit('reloaded', interaction);
+                          this.text = '';
+                          this.$refs.editor.reset();
                       } else {
                           Site.toast(this, response);
                       }
 
                   })
                   .catch((error) => {
+                      this.mask = false;
                       Site.toast(this, error);
                   });
 

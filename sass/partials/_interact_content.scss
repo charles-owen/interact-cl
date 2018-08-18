@@ -13,7 +13,7 @@ div.cl-interact-content {
   }
 
   pre.code, figure img, img.figure, .rightbox, .centerbox,
-  .advice, .problem, .scenario, div.toggleblock {
+  .advice, .problem, .scenario, div.cl-toggleblock {
     @extend %shadow;
     padding:8px;
     border: 1px black solid;

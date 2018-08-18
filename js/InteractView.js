@@ -4,7 +4,7 @@ import InteractMainVue from './Vue/InteractMain.vue';
 
 export const InteractView = function(site, element) {
 
-    let template = `<div><component :is="current" @open="open" :data="data"></component></div>`;
+    let template = `<div id="cl-interact"><component :is="current" @open="open" :data="data"></component></div>`;
 
     const data = JSON.parse(element.textContent);
 

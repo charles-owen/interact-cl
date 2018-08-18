@@ -47,17 +47,28 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		switch($params[0]) {
 			// /api/interact/summaries
+			// /api/interact/summaries/stats
 			case 'summaries':
-				return $this->summaries($site, $user, $server);
+				return $this->summaries($site, $user, $server, $params);
 
 			// /api/interact/interaction
 			// /api/interact/interaction/:id
+			// /api/interact/interaction/:id/delete
+			// /api/interact/interaction/:id/edit
+			// /api/interact/interaction/:id/follow
 			case 'interaction':
 				return $this->interaction($site, $user, $server, $params, $time);
 
-			// /api/interact/discuss/:id
+			// /api/interact/discuss/:interactid
+
 			case 'discuss':
 				return $this->discuss($site, $user, $server, $params, $time);
+
+			// /api/interact/discussion/:discussionid/delete
+			// /api/interact/discussion/:discussionid/edit
+			// /api/interact/discussion/:discussionid/endorse
+			case 'discussion':
+				return $this->discussion($site, $user, $server, $params, $time);
 
 			// /api/interact/email
 			// /api/interact/email/:memberid
@@ -72,9 +83,108 @@ class InteractApi extends \CL\Users\Api\Resource {
 		throw new APIException("Invalid API Path", APIException::INVALID_API_PATH);
 	}
 
+	/**
+	 * /api/interact/discussion/:discussionid/delete
+	 * /api/interact/discussion/:discussionid/edit
+	 * /api/interact/discussion/:discussionid/endorse
+	 *
+	 * Modifications to discussion items.
+	 *
+	 * @param Site $site
+	 * @param User $user
+	 * @param Server $server
+	 * @param array $params
+	 * @param $time
+	 * @return JsonAPI
+	 * @throws APIException
+	 */
+	private function discussion(Site $site, User $user, Server $server, array $params, $time)
+	{
+		if($server->requestMethod !== 'POST') {
+			throw new APIException("Invalid API Usage", APIException::INVALID_API_USAGE);
+		}
+
+		$interacts = new Interacts($site->db);
+		$discussions = new Discussions($site->db);
+
+		if(count($params) < 3) {
+			throw new APIException("Invalid API Usage", APIException::INVALID_API_USAGE);
+		}
+
+		$discussionId = +$params[1];
+		$discussion = $discussions->get($discussionId);
+		if ($discussion === null) {
+			throw new APIException("Discussion item no longer exists");
+		}
+
+		$interactId = $discussion->interactId;
+
+		$cmd = $params[2];
+
+		if ($cmd === 'delete') {
+			if(!$user->atLeast(Member::STAFF)) {
+				if($discussion->user->id !== $user->id) {
+					throw new APIException('Not authorized to delete this discussion item');
+				}
+			}
+
+			$discussions->delete($discussion);
+		} else if($cmd === 'edit') {
+			if(!$user->atLeast(Member::STAFF)) {
+				if($discussion->user->id !== $user->id) {
+					throw new APIException('Not authorized to edit this discussion item');
+				}
+			}
+
+			$post = $server->post;
+			$this->ensure($post, 'message');
+
+			$discussion->message = Interact::sanitize($post['message']);
+			$history = $discussion->meta->get('public', Interact::HISTORY, []);
+			$history[] = [
+				'op'=>'edit',
+				'time'=>$time,
+				'user'=>$user->id,
+				'member'=>$user->member->id,
+				'name'=>$user->displayName,
+				'role'=>$user->role
+			];
+			$discussion->meta->set('public', Interact::HISTORY, $history);
+
+			$discussions->update($discussion);
+		} else if($cmd === 'endorse') {
+			if(!$user->atLeast(Member::STAFF)) {
+				throw new APIException('Not authorized to edit this discussion item');
+			}
+
+			$endorsement = $discussion->meta->get(Interact::ENDORSEMENTS, $user->member->id, null);
+			if($endorsement === null) {
+				$endorsement = [
+					'name'=>$user->displayName,
+					'role'=>$user->role,
+					'time'=>$time
+				];
+
+				$discussion->meta->set(Interact::ENDORSEMENTS, $user->member->id, $endorsement);
+			} else {
+				$discussion->meta->set(Interact::ENDORSEMENTS, $user->member->id, null);
+			}
+
+			$discussions->update($discussion);
+		} else {
+			throw new APIException("Invalid API Path", APIException::INVALID_API_PATH);
+		}
+
+		$interaction = $this->getInteraction($site, $user, $interactId);
+
+		$json = new JsonAPI();
+		$json->addData('interaction', $interaction->id, $interaction->data($site, $user));
+		return $json;
+	}
 
 	/**
-	 * /api/interact/discuss/:id
+	 * /api/interact/discuss/:interactid
+	 *
 	 * POST creates a new discussion on an interaction
 	 *
 	 * @param Site $site
@@ -87,9 +197,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 	 */
 	private function discuss(Site $site, User $user, Server $server, array $params, $time) {
 		$interacts = new Interacts($site->db);
-
-		$post = $server->post;
-		$this->ensure($post, ['message']);
+		$discussions = new Discussions($site->db);
 
 		if(count($params) < 2) {
 			throw new APIException("Invalid API Usage", APIException::INVALID_API_USAGE);
@@ -103,11 +211,15 @@ class InteractApi extends \CL\Users\Api\Resource {
 			throw new APIException('Interaction is no longer available');
 		}
 
+
 		if(!$user->atLeast(Member::STAFF)) {
 			if($interaction->private && $interaction->user->id !== $user->id) {
 				throw new APIException('Not authorized to discuss this interaction');
 			}
 		}
+
+		$post = $server->post;
+		$this->ensure($post, ['message']);
 
 		$message = Interact::sanitize($post['message']);
 
@@ -125,8 +237,11 @@ class InteractApi extends \CL\Users\Api\Resource {
 		$discussion->time = $time;
 		$discussion->message = $message;
 
-		$discussions = new Discussions($site->db);
 		$discussions->add($discussion);
+
+		// Interaction time is set to the time of the discussion item
+		$interaction->time = $time;
+		$interacts->update($interaction);
 
 		// Get the discussions for this interaction
 		$interaction->discussions = $discussions->getFor($interactId);
@@ -150,6 +265,8 @@ class InteractApi extends \CL\Users\Api\Resource {
 	/**
 	 * /api/interact/interaction
 	 * /api/interact/interaction/:id
+	 * /api/interact/interaction/:id/delete
+	 * /api/interact/interaction/:id/follow
 	 * POST creates a new interaction or edits an existing interaction
 	 *
 	 * @param Site $site
@@ -164,74 +281,111 @@ class InteractApi extends \CL\Users\Api\Resource {
 		$interacts = new Interacts($site->db);
 
 		$interactId = 0;
+		$interaction = null;
 		if(count($params) > 1) {
 			$interactId = +$params[1];
-
-			// Get this interaction
-			$interaction = $interacts->get($interactId);
-			if($interaction === null) {
-				throw new APIException('Interaction does not exist');
-			}
-
-			if(!$user->atLeast(Member::STAFF)) {
-				if($interaction->private && $interaction->user->id !== $user->id) {
-					throw new APIException('Not authorized to view this interaction');
-				}
-			}
-
-			// Get the discussions
-			$discussions = new Discussions($site->db);
-			$interaction->discussions = $discussions->getFor($interactId);
+			$interaction = $this->getInteraction($site, $user, $interactId);
 		}
 
 		if($server->requestMethod === 'POST') {
-			if(count($params) > 1) {
-				// Until we get editing working
-				throw new APIException("Invalid API Usage", APIException::INVALID_API_USAGE);
-			}
-
-			$post = $server->post;
-			$keys = ['type', 'assign', 'summary', 'message'];
-			$this->ensure($post, $keys);
-
-			$interaction = new Interaction();
-			$interaction->user = $user;
-			$interaction->assignTag = $post['assign'];
-			$interaction->sectionTag = !empty($post['section']) ? $post['section'] : null;
-			$interaction->type = $post['type'];
-			$interaction->pin = isset($post['pin']);
-			$interaction->private = isset($post['private']);
-			$interaction->summary = Interact::sanitize($post['summary']);
-			$interaction->message = Interact::sanitize($post['message']);
-			$sendAll = isset($post['sendall']) && $user->atLeast(Member::TA);
-			$interaction->time = $time;
-			$interaction->created = $time;
-
-			$id = $interacts->add($interaction);
-			if($id === 0) {
-				throw new APIException('Error adding interaction to database');
-			}
-
-			/*
-			 * User is following this post
-			 */
-			$interFollows = new InterFollows($site->db);
-			$interFollows->setFollowing($user->member->id, $id, InterFollows::FOLLOWING);
-
-			// Set all staff who currently are receiving email as following
-			$members = new Members($site->db);
-			$staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true]);
-			foreach($staff as $staffUser) {
-				$receiving = $staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $staffUser->atLeast(Member::TA));
-				if($receiving) {
-					$interFollows->setFollowing($staffUser->member->id, $id, InterFollows::FOLLOWING);
+			if($interaction !== null && count($params) === 3 && $params[2] === 'delete') {
+				if(!$user->atLeast(Member::STAFF)) {
+					if($interaction->user->id !== $user->id) {
+						throw new APIException('Not authorized to delete this interaction');
+					}
 				}
+
+				$interacts->delete($interaction);
+				return new JsonAPI();
 			}
 
-			$email = new InteractEmail($site, $user, $server->email);
-			$email->newInteraction($interaction, $sendAll);
+			if($interaction !== null && count($params) === 3 && $params[2] === 'follow') {
+				// Toggle following
+				$interFollows = new InterFollows($site->db);
+				$following = $interFollows->getFollowing($user->member->id, $interaction->id);
+				switch($following) {
+					case InterFollows::FOLLOWING:
+						$interFollows->setFollowing($user->member->id, $interaction->id, InterFollows::NOTFOLLOWING);
+						break;
 
-			// Restore autoanswer system
+					case InterFollows::NOTFOLLOWING:
+						$interFollows->setFollowing($user->member->id, $interaction->id, InterFollows::FOLLOWING);
+						break;
+				}
+			} else if($interaction !== null && count($params) === 3 && $params[2] === 'edit') {
+				//
+				// Editing an interaction
+				//
+				$post = $server->post;
+				$keys = ['type', 'assign', 'summary', 'message'];
+				$this->ensure($post, $keys);
+
+				$interaction->assignTag = $post['assign'];
+				$interaction->sectionTag = !empty($post['section']) ? $post['section'] : null;
+				$interaction->type = $post['type'];
+				$interaction->pin = isset($post['pin']);
+				$interaction->private = isset($post['private']);
+				$interaction->summary = Interact::sanitize($post['summary']);
+				$interaction->message = Interact::sanitize($post['message']);
+				$interaction->time = $time;
+
+				$history = $interaction->meta->get('public', Interact::HISTORY, []);
+				$history[] = [
+					'op'=>'edit',
+					'time'=>$time,
+					'user'=>$user->id,
+					'member'=>$user->member->id,
+					'name'=>$user->displayName,
+					'role'=>$user->role
+				];
+				$interaction->meta->set('public', Interact::HISTORY, $history);
+
+				$interacts->update($interaction);
+
+			} else if($interaction === null) {
+				// New posting!
+				$post = $server->post;
+				$keys = ['type', 'assign', 'summary', 'message'];
+				$this->ensure($post, $keys);
+
+				$interaction = new Interaction();
+				$interaction->user = $user;
+				$interaction->assignTag = $post['assign'];
+				$interaction->sectionTag = !empty($post['section']) ? $post['section'] : null;
+				$interaction->type = $post['type'];
+				$interaction->pin = isset($post['pin']);
+				$interaction->private = isset($post['private']);
+				$interaction->summary = Interact::sanitize($post['summary']);
+				$interaction->message = Interact::sanitize($post['message']);
+				$sendAll = isset($post['sendall']) && $user->atLeast(Member::TA);
+				$interaction->time = $time;
+				$interaction->created = $time;
+
+				$id = $interacts->add($interaction);
+				if($id === 0) {
+					throw new APIException('Error adding interaction to database');
+				}
+
+				/*
+				 * User is following this post
+				 */
+				$interFollows = new InterFollows($site->db);
+				$interFollows->setFollowing($user->member->id, $id, InterFollows::FOLLOWING);
+
+				// Set all staff who currently are receiving email as following
+				$members = new Members($site->db);
+				$staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true]);
+				foreach($staff as $staffUser) {
+					$receiving = $staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $staffUser->atLeast(Member::TA));
+					if($receiving) {
+						$interFollows->setFollowing($staffUser->member->id, $id, InterFollows::FOLLOWING);
+					}
+				}
+
+				$email = new InteractEmail($site, $user, $server->email);
+				$email->newInteraction($interaction, $sendAll);
+
+				// TODO: Restore autoanswer system
 
 //		if($interaction->get_type() === Interaction::Question) {
 //			//
@@ -258,12 +412,44 @@ class InteractApi extends \CL\Users\Api\Resource {
 //				}
 //			}
 //		}
+			}
 
 		}
 
 		$json = new JsonAPI();
 		$json->addData('interaction', $interaction->id, $interaction->data($site, $user));
 		return $json;
+	}
+
+
+	/**
+	 * Get an interaction and discussions.
+	 * @param Site $site
+	 * @param User $user
+	 * @param $interactId
+	 * @return Interaction|null
+	 * @throws APIException
+	 */
+	private function getInteraction(Site $site, User $user, $interactId) {
+		$interacts = new Interacts($site->db);
+
+		// Get this interaction
+		$interaction = $interacts->get($interactId);
+		if($interaction === null) {
+			throw new APIException('Interaction does not exist');
+		}
+
+		if(!$user->atLeast(Member::STAFF)) {
+			if($interaction->private && $interaction->user->id !== $user->id) {
+				throw new APIException('Not authorized to view this interaction');
+			}
+		}
+
+		// Get the discussions
+		$discussions = new Discussions($site->db);
+		$interaction->discussions = $discussions->getFor($interactId);
+
+		return $interaction;
 	}
 
 
@@ -275,36 +461,71 @@ class InteractApi extends \CL\Users\Api\Resource {
 	 * @param Site $site
 	 * @param User $user
 	 * @param Server $server
+	 * @param array $params
 	 * @return JsonAPI
 	 * @throws APIException
 	 */
-	private function summaries(Site $site, User $user, Server $server) {
+	private function summaries(Site $site, User $user, Server $server, array $params) {
 		$interacts = new Interacts($site->db);
-
 		$get = $server->get;
 
-		$params = [
-			'limit'=>self::MAX_SUMMARIES + 1,
+		$query = [
 			'semester'=>$user->member->semester,
 			'section'=>$user->member->sectionId
 		];
 
-		if(!empty($get['before'])) {
-			$params['before'] = +$get['before'];
+		if(!empty($get['assign'])) {
+			$query['assignTag'] = $get['assign'];
+		}
+
+		if(!empty($get['section'])) {
+			$query['sectionTag'] = $get['section'];
 		}
 
 		if(!$user->atLeast(Member::STAFF)) {
-			$params['privateMember'] = $user->member->id;
+			$query['privateMember'] = $user->member->id;
 		}
 
-		$summaries = $interacts->summaries($params);
+		if(count($params) === 2 && $params[1] === 'stats') {
+			$questions = 0;
+			$announcements = 0;
+
+			foreach($interacts->counts($query) as $count) {
+				if($count['type'] === Interaction::QUESTION) {
+					$questions = +$count['count'];
+				}
+
+				if($count['type'] === Interaction::ANNOUNCEMENT) {
+					$announcements = +$count['count'];
+				}
+			}
+
+			$data = ['questions'=>$questions, 'announcements'=>$announcements];
+			$json = new JsonAPI();
+			$json->addData('interact-stats', 0, $data);
+			return $json;
+		}
+
+		$limit = self::MAX_SUMMARIES;
+		if(!empty($get['limit'])) {
+			if($get['limit'] < $limit) {
+				$limit = $get['limit'];
+			}
+		}
+
+		$query['limit'] = $limit + 1;
+		if(!empty($get['before'])) {
+			$query['before'] = +$get['before'];
+		}
+
+		$summaries = $interacts->summaries($query);
 
 		$data = [];
-		for($i=0; $i<count($summaries) && $i<self::MAX_SUMMARIES; $i++) {
+		for($i=0; $i<count($summaries) && $i<$limit; $i++) {
 			$data[] = $summaries[$i]->summaryData($site, $user);
 		}
 
-		if(count($summaries) > self::MAX_SUMMARIES) {
+		if(count($summaries) > $limit) {
 			$data[] = ['more'=>true];
 		}
 

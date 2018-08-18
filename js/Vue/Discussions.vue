@@ -1,9 +1,10 @@
 <template>
   <div class="cl-discussions">
     <h3>DISCUSSION</h3>
-    <discussion v-for="discussion in interaction.discussions" :key="discussion.id" :discussion="discussion"></discussion>
+    <discussion v-for="discussion in interaction.discussions" :key="discussion.id"
+                :discussion="discussion" @reloaded="reloaded" @select="select"></discussion>
 
-    <new-discussion :interaction="interaction"></new-discussion>
+    <new-discussion :interaction="interaction" @reloaded="reloaded"></new-discussion>
   </div>
 </template>
 
@@ -21,6 +22,14 @@
         components: {
             newDiscussion: NewDiscussionVue,
             discussion: DiscussionVue
+        },
+        methods: {
+            reloaded(interaction) {
+            	this.$emit('reloaded', interaction);
+            },
+            select(id) {
+            	this.$emit('select', id);
+            }
         }
     }
 

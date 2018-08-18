@@ -22,6 +22,11 @@ export const Interaction = function(data) {
     this.message = data.message;
     this.by = data.by;
     this.byRole = data.byRole;
+    this.assign = data.assign;
+    this.section = data.section;
+	this.history = data.history;
+	this.memberid = data.memberid;
+	this.following = data.following;
 
     this.discussions = [];
     if(data.discussions !== undefined) {
@@ -36,3 +41,8 @@ Interaction.QUESTION = 'Q';
 
 /// Announcement
 Interaction.ANNOUNCEMENT = 'A';
+
+Interaction.FOLLOWING = 'F';          ///< User is following the interaction
+Interaction.NOTFOLLOWING = 'N';       ///< User is not following
+Interaction.NEVERFOLLOW = 'X';        ///< User will never follow
+

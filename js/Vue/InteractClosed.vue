@@ -1,17 +1,53 @@
 <template>
   <div class="cl-interact">
-    <h2 class="banner"><button class="start" @click.prevent="click"><img :src="root + '/vendor/cl/interact/img/logo16.png'" width="16" height="16"> Interact!</button>
-      <span class="info">64 questions, 1 announcement</span>
-      <span class="message"></span></h2>
+    <h2 class="cl-banner"><button class="cl-start" @click.prevent="click"><img :src="root + '/vendor/cl/interact/img/logo16.png'" width="16" height="16"> Interact!</button>
+      <span class="cl-info">{{info}}</span>
+      <span class="cl-message"></span></h2>
   </div>
 </template>
 
 <script>
   export default {
+  	props: ['data'],
       data: function() {
           return {
-              root: Site.root
+              root: Site.root,
+              info: ''
           }
+      },
+      mounted() {
+  		  if(this.data.categories.length === 1) {
+          let params = {
+            assign: this.data.categories[0].tag,
+            section: this.data.section
+          };
+
+          Site.api.get('/api/interact/summaries/stats', params)
+              .then((response) => {
+                  if (!response.hasError()) {
+                  	const stats = response.getData('interact-stats').attributes;
+                  	this.info = '';
+                  	if(stats.questions > 0) {
+                  		this.info = stats.questions + (stats.questions === 1 ? ' question' : ' questions');
+                    }
+
+                    if(stats.announcements > 0) {
+                  		if(this.info.length > 0) {
+                  			this.info += ', ';
+                      }
+
+                      this.info += stats.announcements + (stats.announcements === 1 ? ' announcement' : ' announcements');
+                    }
+
+                  } else {
+                      Site.toast(this, response);
+                  }
+
+              })
+              .catch((error) => {
+                  Site.toast(this, error);
+              });
+        }
       },
       methods: {
           click() {

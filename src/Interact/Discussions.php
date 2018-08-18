@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS `$this->tablename` (
   time       datetime NOT NULL, 
   message    mediumtext NOT NULL, 
   metadata   mediumtext, 
+  deleted    tinyint NOT NULL, 
   PRIMARY KEY (id), 
   INDEX (interactid));
 
@@ -49,15 +50,14 @@ SQL;
 	/**
 	 * Add a new discussion item to the table
 	 * @param Discussion $discussion Item to add
-	 * @param int $time Timestamp
 	 * @return int ID for the inserted discussion item
 	 */
     public function add(Discussion $discussion) {
         $pdo = $this->pdo();
 
         $sql = <<<SQL
-insert into $this->tablename(interactid, memberid, time, message, metadata)
-values(?, ?, ?, ?, ?)
+insert into $this->tablename(interactid, memberid, time, message, metadata, deleted)
+values(?, ?, ?, ?, ?, 0)
 SQL;
 
         $stmt = $pdo->prepare($sql);
@@ -74,14 +74,40 @@ SQL;
     }
 
 	/**
+	 * Update a new discussion item in the table
+	 * @param Discussion $discussion Item new values to set
+	 * @return int ID for the inserted discussion item
+	 */
+	public function update(Discussion $discussion) {
+		$pdo = $this->pdo();
+
+		$sql = <<<SQL
+update $this->tablename
+set message=?, metadata=?
+where id=?
+SQL;
+
+		$stmt = $pdo->prepare($sql);
+		$stmt->execute([
+			$discussion->message,
+			$discussion->meta->json(),
+			$discussion->id
+		]);
+
+		$discussion->id = $pdo->lastInsertId();
+		return $discussion->id;
+	}
+
+	/**
 	 * Get the discussion items for a given interaction
-	 * @param Interaction $interaction
+	 * @param int $interactId The Interaction ID.
 	 * @return array
 	 */
     public function getFor($interactId) {
 	    $where = new \CL\Tables\TableWhere($this);
 
 	    $where->append('discussion.interactid=?', $interactId, \PDO::PARAM_INT);
+	    $where->append('discussion.deleted=?', 0, \PDO::PARAM_INT);
 
 	    $fields = <<<FIELDS
 discussion.id as id, discussion.interactid as interactid, discussion.time as time, discussion.message as message, discussion.metadata as metadata
@@ -94,7 +120,7 @@ FIELDS;
 join $this->tablename discussion
 on member.id=discussion.memberid
 $where->where
-order by time desc 
+order by time 
 SQL;
 
 	    // echo $where->sub_sql($sql);
@@ -106,6 +132,59 @@ SQL;
 
 	    return $discussions;
     }
+
+	/**
+	 * Delete a discussion item
+	 * @param Discussion $discussion item to delete.
+	 */
+	public function delete(Discussion $discussion) {
+		$pdo = $this->pdo();
+
+		$sql = <<<SQL
+update $this->tablename
+set deleted=1
+where id=?
+SQL;
+
+		$stmt = $pdo->prepare($sql);
+		$stmt->execute([$discussion->id]);
+	}
+
+
+	/**
+	 * Get a discussion item by ID
+	 * @param int $discussionId ID to delete
+	 * @return Discussion object
+	 */
+	public function get($discussionId) {
+		$where = new \CL\Tables\TableWhere($this);
+
+		$where->append('discussion.id=?', $discussionId, \PDO::PARAM_INT);
+		$where->append('discussion.deleted=?', 0, \PDO::PARAM_INT);
+
+		$fields = <<<FIELDS
+discussion.id as id, discussion.interactid as interactid, discussion.time as time, discussion.message as message, discussion.metadata as metadata
+FIELDS;
+
+		$members = new Members($this->config);
+		$sql = $members->memberUserJoinSQL($fields, false, 'user_', 'member_');
+
+		$sql .= <<<SQL
+join $this->tablename discussion
+on member.id=discussion.memberid
+$where->where
+order by time 
+SQL;
+
+		// echo $where->sub_sql($sql);
+		$result = $where->execute($sql);
+		$row = $result->fetch(\PDO::FETCH_ASSOC);
+		if($row === null || $row === false) {
+			return null;
+		}
+
+		return new Discussion($row);
+	}
 
 
 //	/**

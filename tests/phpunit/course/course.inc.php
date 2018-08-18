@@ -3,6 +3,7 @@
  * This file contains the information that specifies a course
  *
  * This file must return a function that accepts the variable $course
+ * @cond
  */
 
 use \CL\Course\Section;
@@ -23,3 +24,4 @@ return function(\CL\Course\Course $course) {
 	$course->gradedispute = '<a href="mailto:ta@msu.edu">Some TA</a>';
 };
 
+/// @endcond

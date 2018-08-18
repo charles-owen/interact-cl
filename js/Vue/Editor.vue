@@ -45,6 +45,11 @@
                     } );
 
                 this.active = true;
+            },
+            reset() {
+              this.active = false;
+              this.editor.destroy();
+	            this.$refs['textarea'].value = '';
             }
         }
 

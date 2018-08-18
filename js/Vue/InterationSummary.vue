@@ -6,7 +6,7 @@
     </h3>
     <p class="link">@{{item.id}} {{item.discussionsCnt}}<span>{{date}}</span></p>
     <p>{{item.summarized}}</p>
-    <p class="cl-attribution">{{item.attribution}}</p></div>
+    <p class="cl-attribution" v-html="item.attribution"></p></div>
 </template>
 
 <script>
@@ -27,7 +27,7 @@
       },
       methods: {
           click() {
-              this.$emit('select', this.item);
+              this.$emit('select', this.item.id);
           }
       }
   }

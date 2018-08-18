@@ -1,17 +1,18 @@
 <template>
   <div class="cl-interact">
     <form class="search">
-      <h2 class="banner"><button class="ask" type="button" @click.prevent="ask"><img :src="root + '/vendor/cl/interact/img/logo16.png'" width="16" height="16"> ¿Ask a Question?</button> Interact!
-        <span class="message"></span><span class="search"><input type="text" placeholder="Search..." name="search"><button type="submit">Search</button></span>
+      <h2 class="cl-banner"><button @click.prevent="ask"><img :src="root + '/vendor/cl/interact/img/logo16.png'" width="16" height="16"> ¿Ask a Question?</button> Interact!
+        <span class="cl-search"><input type="text" placeholder="Search..." name="search"><button type="submit">Search</button></span>
       </h2>
     </form>
     <div class="cl-interact-body">
       <interactions :summaries="summaries" :selected="selected" @select="select"></interactions>
       <div class="cl-interaction-presenter">
-        <new-interaction v-if="composing" :data="data" @cancel="cancelComposing"></new-interaction>
+        <new-interaction v-if="composing" :data="data" @cancel="cancelComposing" @interaction="newInteraction"></new-interaction>
         <template v-else>
-          <welcome v-if="selected === null"></welcome>
-          <interaction-view v-else :summary="selected"></interaction-view>
+          <welcome v-if="selected === 0"></welcome>
+          <interaction-presenter v-else :data="data" :selected="selected" @discussed="discussed"
+                                 @deleted="deleted" @reloaded="reloaded" @select="select"></interaction-presenter>
         </template>
       </div>
     </div>
@@ -26,40 +27,89 @@
   import {Summaries} from '../Models/Summaries';
 
   export default {
-      props: ['data'],
+      props: ['data', 'id'],
       data: function() {
           return {
               root: Site.root,
               summaries: new Summaries(),
-              selected: null,     // Currently selected interaction
+              selected: 0,        // Currently selected interaction ID, 0 if none
               composing: false   // True if we are entering a new interaction
           }
       },
       components: {
           interactions: InteractionsVue,
-          interactionView: InteractionPresenterVue,
+          interactionPresenter: InteractionPresenterVue,
           newInteraction: NewInteractionVue,
           welcome: WelcomeVue
       },
+      watch: {
+      	id() {
+      		this.select(this.id);
+        }
+      },
       created() {
+      	this.summaries = new Summaries(this.data);
       },
       mounted() {
-        this.summaries.fetch();
+        this.summaries.fetch(() => {
+        	if(this.id !== undefined) {
+        		this.select(this.id);
+          } else {
+	          this.selectFirst();
+          }
+        });
       },
       methods: {
+      	selectFirst() {
+	        if(this.selected === 0 && this.summaries.summaries.length > 0) {
+	        	this.select(this.summaries.summaries[0].id);
+	        }
+        },
           ask() {
-              this.selected = null;
+              this.saveSelected = this.selected;
+              this.select(0);
               this.composing = true;
           },
           cancelComposing() {
-              this.compsing = false;
+              this.composing = false;
+              this.select(this.saveSelected);
           },
-          select(item) {
-              if(this.composing) {
+          select(id) {
+      		  if(id !== this.id && this.$router !== undefined) {
+      		  	if(id === 0) {
+		          this.$router.push(Site.root + '/cl/interact');
+              } else {
+		            this.$router.push(Site.root + '/cl/interact/' + id);
+              }
+            }
+
+            if(this.composing) {
+                return;
+            }
+
+            this.selected = id;
+          },
+          newInteraction(interaction) {
+              if(!this.composing) {
                   return;
               }
 
-              this.selected = item;
+              this.composing = false;
+              this.summaries.add(interaction);
+              this.select(interaction.id);
+          },
+          discussed(interaction) {
+              this.summaries.add(interaction);
+	          this.select(interaction.id);
+          },
+          deleted(interaction) {
+          	this.summaries.remove(interaction);
+          	this.selected = 0;
+          	this.selectFirst();
+          },
+          reloaded(interaction) {
+	          this.summaries.add(interaction);
+	          this.select(interaction.id);
           }
       }
   }

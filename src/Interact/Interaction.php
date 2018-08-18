@@ -34,8 +34,12 @@ class Interaction extends InteractContent {
     /// Announcement
     const ANNOUNCEMENT = 'A';
 
-
-    public function __construct($row = null, $prefix='') {
+	/**
+	 * Interaction constructor.
+	 * @param array $row Database table row
+	 * @param string $prefix Optional row name prefix for Interact table content.
+	 */
+    public function __construct(array $row = null, $prefix='') {
 		parent::__construct($row, $prefix);
 
 		if($row !== null) {
@@ -56,6 +60,14 @@ class Interaction extends InteractContent {
      * <b>Properties</b>
      * Property | Type | Description
      * -------- | ---- | -----------
+     * assignTag | string | Assignment tag for this interaction
+     * created | int | When interaction was created
+     * discussions | array | Array of Discussion objects for this interaction
+     * pin | bool | True if interaction is pinned
+     * private | bool | True if interaction is private
+     * type | string | Interaction type, Interaction::QUESTION or Interactin::ANNOUNCEMENT
+     * sectionTag | string | Section tag for this interaction or null if none
+     * summary | string | Interaction summary line
      *
      * @param string $property Property name
      * @return mixed
@@ -97,6 +109,14 @@ class Interaction extends InteractContent {
 	 * <b>Properties</b>
 	 * Property | Type | Description
 	 * -------- | ---- | -----------
+	 * assignTag | string | Assignment tag for this interaction
+	 * created | int | When interaction was created
+	 * discussions | array | Array of Discussion objects for this interaction
+	 * pin | bool | True if interaction is pinned
+	 * private | bool | True if interaction is private
+	 * sectionTag | string | Section tag for this interaction or null if none
+	 * summary | string | Interaction summary line
+	 * type | string | Interaction type, Interaction::QUESTION or Interactin::ANNOUNCEMENT
 	 *
 	 * @param string $property Property name
 	 * @param mixed $value Value to set
@@ -218,7 +238,10 @@ class Interaction extends InteractContent {
 	public function summaryData(Site $site, User $user) {
 		return [
 			'id'=>$this->id,
+			'assign'=>$this->assignTag,
+			'section'=>$this->sectionTag,
 			'pin'=>$this->pin,
+			'private'=>$this->private,
 			'time'=>$this->time,
 			'summarized'=>$this->summarize(),
 			'summary'=>$this->summary,
@@ -230,7 +253,7 @@ class Interaction extends InteractContent {
 	}
 
 	/**
-	 * Create client data when in summary mode.
+	 * Create client data when in interaction mode.
 	 * @param Site $site The Site object
 	 * @param User $user The current user
 	 * @return array results
@@ -244,6 +267,8 @@ class Interaction extends InteractContent {
 		}
 
 		$data1 = [
+			'assign'=>$this->assignTag,
+			'section'=>$this->sectionTag,
 			'pin'=>$this->pin,
 			'private'=>$this->private,
 			'created'=>$this->created,
@@ -256,6 +281,17 @@ class Interaction extends InteractContent {
 			'message'=>$this->message,
 			'discussions'=>$discussions
 		];
+
+		$data1['history'] = $this->historyData($user);
+
+		// Some additional data goes to staff only
+		if($user->atLeast(Member::STAFF)) {
+			$data1['memberid'] = $this->user->member->id;
+		}
+
+		// Are we following?
+		$interFollows = new InterFollows($site->db);
+		$data1['following'] = $interFollows->getFollowing($user->member->id, $this->id);
 
 		return array_merge($data, $data1);
 	}

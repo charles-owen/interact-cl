@@ -1,6 +1,6 @@
 <template>
   <div class="cl-interactions">
-    <interaction-summary v-for="item in summaries.summaries" :selected="item === selected" :item="item" :key="item.id" @select="select"></interaction-summary>
+    <interaction-summary v-for="item in summaries.summaries" :selected="item.id === selected" :item="item" :key="item.id" @select="select"></interaction-summary>
     <div v-if="summaries.more" class="cl-more"><a @click.prevent="more">...more...</a></div>
   </div>
 </template>
@@ -19,8 +19,8 @@
           more() {
               this.summaries.fetch();
           },
-          select(summary) {
-              this.$emit('select', summary);
+          select(id) {
+              this.$emit('select', id);
           }
       }
   }

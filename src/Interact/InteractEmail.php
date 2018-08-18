@@ -31,7 +31,7 @@ class InteractEmail {
 	 *
 	 * This is also called when all users are forced to follow an existing interaction
 	 * @param Interaction $interaction The new Interaction that has been added
-	 * @param bool $fsendAll If true, send out to all users
+	 * @param bool $sendAll If true, send out to all users
 	 */
 	public function newInteraction(Interaction $interaction, $sendAll=false) {
 		$courseName = $this->site->course->name;

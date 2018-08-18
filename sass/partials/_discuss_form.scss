@@ -1,0 +1,32 @@
+/**
+ * @file
+ * The discussion entry form.
+ */
+div.cl-discuss-form {
+  position: relative;
+  padding: 0 $padding;
+  border-bottom: 1px solid black;
+
+  >h4 {
+    margin: 1em 0 0 0;
+    font-size: 14px;
+  }
+
+  form {
+    margin: 0;
+    padding: 0;
+
+    >p {
+      position: relative;
+      margin: 5px 0;
+      padding: 0;
+    }
+  }
+
+  textarea {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+  }
+}

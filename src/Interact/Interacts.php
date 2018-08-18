@@ -14,8 +14,6 @@ use CL\Course\Members;
  * This is the main table for the Interact course discussion system.
  */
 class Interacts extends \CL\Tables\Table {
-    const DEFAULT_LIMIT = 200;
-
 	/**
 	 * Constructor
 	 * @param \CL\Tables\Config $config The Database configuration object
@@ -44,6 +42,7 @@ CREATE TABLE IF NOT EXISTS `$this->tablename` (
   summary    varchar(100) NOT NULL, 
   message    mediumtext NOT NULL, 
   metadata   mediumtext, 
+  deleted    tinyint NOT NULL, 
   PRIMARY KEY (id), 
   INDEX (assigntag), 
   INDEX (time), 
@@ -76,14 +75,6 @@ SQL;
 	}
 
 
-    public function __get($key) {
-        switch($key) {
-
-            default:
-                return parent::__get($key);
-        }
-    }
-
 
 	/**
 	 * Add a new interaction to the table
@@ -95,8 +86,8 @@ SQL;
 
         $sql = <<<SQL
 insert into $this->tablename(memberid, assigntag, sectiontag, created, time, 
-							`type`, pin, private, summary, message, metadata)
-values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+							`type`, pin, private, summary, message, metadata, deleted)
+values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
 SQL;
 
 		$a = [$interaction->user->member->id,
@@ -120,6 +111,10 @@ SQL;
         return $interaction->id;
     }
 
+	/**
+	 * @param array $params Parameters to the query.
+	 * @return array Array of Interaction objects.
+	 */
     public function summaries($params = []) {
 	    $where = new \CL\Tables\TableWhere($this);
 	    $discussions = new Discussions($this->config);
@@ -145,15 +140,29 @@ SQL;
 		    $where->append('interact.time>?', $this->timeStr($params['after']));
 	    }
 
+	    if(isset($params['assignTag'])) {
+		    $where->append('interact.assigntag=?', $params['assignTag']);
+	    }
+
+	    if(isset($params['sectionTag'])) {
+		    $where->append('interact.sectiontag=?', $params['sectionTag']);
+	    }
+
 	    if(isset($params['privateMember'])) {
 			$where->append('(private=0 or member.id=?)', $params['privateMember'], \PDO::PARAM_INT);
+	    }
+
+	    if(isset($params['deleted']) && $params['deleted']) {
+			// Don't filter them out
+	    } else {
+		    $where->append('interact.deleted=?', 0, \PDO::PARAM_INT);
 	    }
 
 	    $fields = <<<FIELDS
 interact.id as id, assigntag, sectiontag, 
 interact.created as created, interact.time as time, interact.type as type,
 pin, private, interact.summary as summary, interact.message as message,
-interact.metadata as metadata, count(discussion.id) as discussions
+interact.metadata as metadata, interact.deleted as deleted, count(discussion.id) as discussions
 FIELDS;
 
 	    $members = new Members($this->config);
@@ -163,7 +172,7 @@ FIELDS;
 join $this->tablename interact
 on member.id=interact.memberid
 left join $discussionsTable discussion
-on interact.id=discussion.interactid
+on interact.id=discussion.interactid and discussion.deleted=0
 $where->where
 group by interact.id
 order by pin desc, time desc 
@@ -174,7 +183,7 @@ SQL;
 		    $where->append(null, intval($params['limit']), \PDO::PARAM_INT);
 	    }
 
-	    // echo $where->sub_sql($sql);
+	    // echo "\n" . $where->sub_sql($sql) . "\n";
 	    $result = $where->execute($sql);
 	    $summaries = [];
 	    foreach($result->fetchAll(\PDO::FETCH_ASSOC) as $row) {
@@ -185,6 +194,62 @@ SQL;
 
 	    return $summaries;
     }
+
+	/**
+	 * Get the counts of numbers of questions and announcements.
+	 * @param array $params Parameters to the query.
+	 * @return array Array of Interaction objects.
+	 */
+	public function counts($params = []) {
+		$where = new \CL\Tables\TableWhere($this);
+
+		if(isset($params['semester'])) {
+			$where->append('member.semester=?', $params['semester']);
+		}
+
+		if(isset($params['section'])) {
+			$where->append('member.section=?', $params['section']);
+		}
+
+		if(isset($params['sectionId'])) {
+			$where->append('member.section=?', $params['sectionId']);
+		}
+
+		if(isset($params['assignTag'])) {
+			$where->append('interact.assigntag=?', $params['assignTag']);
+		}
+
+		if(isset($params['sectionTag'])) {
+			$where->append('interact.sectiontag=?', $params['sectionTag']);
+		}
+
+		if(isset($params['privateMember'])) {
+			$where->append('(private=0 or member.id=?)', $params['privateMember'], \PDO::PARAM_INT);
+		}
+
+		if(isset($params['deleted']) && $params['deleted']) {
+			// Don't filter them out
+		} else {
+			$where->append('interact.deleted=?', 0, \PDO::PARAM_INT);
+		}
+
+		$members = new Members($this->config);
+		$membersTable = $members->tablename;
+
+		$sql = <<<SQL
+select interact.type as type, count(*) as count
+from $membersTable member		
+join $this->tablename interact
+on member.id=interact.memberid
+$where->where
+group by interact.type
+order by pin desc, time desc 
+SQL;
+
+		// echo "\n" . $where->sub_sql($sql) . "\n";
+		$result = $where->execute($sql);
+		return $result->fetchAll(\PDO::FETCH_ASSOC);
+	}
 
 
 	/**
@@ -203,7 +268,7 @@ SQL;
 interact.id as id, assigntag, sectiontag, 
 interact.created as created, interact.time as time, interact.type as type,
 pin, private, interact.summary as summary, interact.message as message,
-interact.metadata as metadata, count(discussion.id) as discussions
+interact.metadata as metadata, interact.deleted as deleted, count(discussion.id) as discussions
 FIELDS;
 
 	    $members = new Members($this->config);
@@ -231,6 +296,54 @@ SQL;
 
 	    return $interaction;
     }
+
+    /**
+     * Update an interaction in the table
+     * @param Interaction $interaction New values for the interaction to set
+     */
+    public function update(Interaction $interaction) {
+        $pdo = $this->pdo();
+
+        $sql = <<<SQL
+update $this->tablename
+set assigntag=?, sectiontag=?, time=?, type=?, pin=?, private=?, summary=?, message=?, metadata=?
+where id=?
+SQL;
+
+        $stmt = $pdo->prepare($sql);
+        $exec = [
+	        $interaction->assignTag,
+	        $interaction->sectionTag,
+	        $this->timeStr($interaction->time),
+	        $interaction->type,
+	        $interaction->pin ? 1 : 0,
+	        $interaction->private ? 1 : 0,
+	        $interaction->summary,
+	        $interaction->message,
+	        $interaction->meta->json(),
+	        $interaction->id
+        ];
+
+        // echo $this->sub_sql($sql, $exec);
+        $stmt->execute($exec);
+    }
+
+	/**
+	 * Delete an interaction.
+	 * @param Interaction $interaction Interaction to delete.
+	 */
+	public function delete(Interaction $interaction) {
+		$pdo = $this->pdo();
+
+		$sql = <<<SQL
+update $this->tablename
+set deleted=1
+where id=?
+SQL;
+
+		$stmt = $pdo->prepare($sql);
+		$stmt->execute([$interaction->id]);
+	}
 
 
 //
@@ -296,31 +409,7 @@ SQL;
 //        return $result;
 //    }
 
-//    /**
-//     * Update an interaction in the tables
-//     * @param Interaction $interaction New values for the interaction to set
-//     */
-//    public function update(Interaction $interaction) {
-//        $pdo = $this->pdo();
-//
-//        $sql = <<<SQL
-//update $this->tablename
-//set userid=?, assigntag=?, sectiontag=?, time=?, type=?, pin=?, private=?, summary=?, message=?
-//where id=?
-//SQL;
-//
-//        $stmt = $pdo->prepare($sql);
-//        $stmt->execute(array($interaction->get_user_id(),
-//            $interaction->get_assign_tag(),
-//            $interaction->get_section_tag(),
-//            date("Y-m-d H:i:s", $interaction->get_time()),
-//            $interaction->get_type(),
-//            $interaction->is_pin() ? 1 : 0,
-//            $interaction->is_private() ? 1 : 0,
-//            $interaction->get_summary(),
-//            $interaction->to_xml(),
-//            $interaction->get_id()));
-//    }
+
 
 //    private function interaction_from_row($row) {
 //        $interaction = new Interaction($this->course,

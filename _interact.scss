@@ -1,5 +1,7 @@
 @import '~site-cl/sass/modules/colors';
 @import 'sass/modules/variables';
+@import 'sass/modules/colors';
+
 @import 'sass/partials/interact';
 @import 'sass/partials/interactions';
 @import 'sass/partials/interaction_presenter';
@@ -10,3 +12,7 @@
 @import 'sass/partials/interact_console';
 @import 'sass/partials/discussions';
 @import 'sass/partials/discussion';
+@import 'sass/partials/discuss_form';
+@import 'sass/partials/interact_form';
+@import 'sass/partials/banner';
+@import 'sass/partials/interact_page';

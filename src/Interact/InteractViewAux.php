@@ -36,6 +36,11 @@ class InteractViewAux extends ViewAux {
     public function install(View $view) {
 	    $this->categoriesSet($view->section);
 
+	    if($view->site->installed('grades') &&
+	        $view->user->staff) {
+	    	$this->gradingLink = $view->site->grades->gradingLink;
+	    }
+
 		//
 	    // Does the file interact.php exist in the config directory?
 	    //
@@ -55,19 +60,28 @@ class InteractViewAux extends ViewAux {
 
     }
 
-    public function present($open=false, $get) {
+	/**
+	 * Present Interact on a page.
+	 *
+	 * This creates the Interact! div and fills it with information that Interact needs.
+	 * @param bool $open If true, open Interact immediately.
+	 * @return string HTML
+	 */
+    public function present($open=false, $id='cl-interact') {
     	$data = [
     		'open'=>$open,
 		    'categories'=>$this->categoriesData,
 		    'section'=>$this->sectionTag
 	    ];
 
+		if($this->gradingLink !== null) {
+			$data['gradingLink'] = $this->gradingLink;
+		}
+
     	$json = htmlspecialchars(json_encode($data), ENT_NOQUOTES);
 
     	$html = <<<HTML
-</div>
-<div class="cl-interact" style="display:none">$json</div>
-<div class="content">
+<div id="$id" style="display:none">$json</div>
 HTML;
 
     	return $html;
@@ -109,8 +123,9 @@ HTML;
 			}
 
 		} else {
-			foreach($this->categories as $key => $value) {
-				$this->categoriesData[] = ['tag'=>$key, 'name'=>$value];
+			foreach($this->categories as $category) {
+				$assignment = $section->get_assignment($category);
+				$this->categoriesData[] = ['tag'=>$assignment->tag, 'name'=>$assignment->name];
 			}
 		}
 
@@ -121,4 +136,5 @@ HTML;
 	private $categories;            // Categories we will look at or null if none provided, meaning use a chooser
 	private $sectionTag;            // Optional section tag
 	private $categoriesData = [];   // Categories data send to the client
+	private $gradingLink = null;    // Any provided grading link?
 }

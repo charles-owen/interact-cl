@@ -1,64 +1,188 @@
 <template>
   <div class="cl-interaction">
-      <h3 class="cl-interaction-heading">
-        <span class="cl-menu"><a><img :src="root + '/vendor/cl/site/img/menubars.png'"></a>
-          <ul>
-            <li><a class="edit"><img :src="root + '/vendor/cl/site/img/pen16.png'"></a> <a
-              class="edit" href="javascript:;">Edit</a></li>
-            <li><a class="delete"><img :src="root + '/vendor/cl/site/img/x.png'"></a> <a
-              class="delete" href="javascript:;">Delete</a></li>
-            <li><a class="grading" href="/cbowen/cse335/lib/grading/assignmentgrader.php?tag=step1&amp;id=190"
-                   target="INTERACT_GRADING"><img :src="root + '/vendor/cl/interact/img/grading.png'"></a> <a
-              class="grading" href="/cbowen/cse335/lib/grading/assignmentgrader.php?tag=step1&amp;id=190"
-              target="INTERACT_GRADING">Grading page</a></li>
-            <li><a class="close" href="javascript:;"><img :src="root + '/vendor/cl/interact/img/close.png'"></a> <a
-              class="close" href="javascript:;">Close discussion</a></li>
-          </ul>
-        </span>
-        <span>{{date}}<br>
-<button class="follow"><img :src="root + '/vendor/cl/interact/img/following.png'" alt="Following" height="16"
-                            width="92"></button> @{{interaction.id}}</span>
-        <img v-if="interaction.pin" :src="root + '/vendor/cl/interact/img/pin25.png'" alt="Pinned" width="17" height="25">
-        <img v-if="interaction.type === announce" :src="root + '/vendor/cl/interact/img/megaphone25.png'" alt="Annoucement" width="29" height="26">
-        {{interaction.summary}}
-      </h3>
-      <p class="link">{{interactionLabel}} {{interaction.by}} / <span v-html="interaction.attribution"></span>
-      </p>
-      <div v-html="interaction.message"></div>
+    <mask-vue :mask="mask">Communicating with server...</mask-vue>
+    <div v-if="!editing">
+      <cl-menu v-if="staff || self">
+        <a><img :src="root + '/vendor/cl/site/img/menubars.png'"></a>
+        <ul>
+          <li><a @click.prevent="editMe"><img :src="root + '/vendor/cl/site/img/pen16.png'"> Edit</a></li>
+          <li><a @click.prevent="deleteMe"><img :src="root + '/vendor/cl/site/img/x.png'"> Delete</a></li>
+          <li v-if="data.gradingLink !== undefined && interaction.assign !== 'general'"><a :href="root + data.gradingLink + '/' + interaction.assign + '/' + interaction.memberid"
+                 target="INTERACT_GRADING"><img :src="root + '/vendor/cl/interact/img/grading.png'"> Grading page</a></li>
+          <!-- <li><a><img :src="root + '/vendor/cl/interact/img/close.png'"> Close discussion</a></li> -->
+        </ul>
+      </cl-menu>
+        <h3 class="cl-interaction-heading">
+          <span>{{date}}<br>
+  <button v-if="interaction.following !== NEVERFOLLOW" class="follow" @click.prevent="follow()">
+    <img v-if="interaction.following === FOLLOWING" :src="root + '/vendor/cl/interact/img/following.png'" alt="Following Interaction" height="16" width="92">
+    <img v-if="interaction.following === NOTFOLLOWING" :src="root + '/vendor/cl/interact/img/follow.png'" alt="Follow Interaction" height="16" width="92">
+  </button> @{{interaction.id}}</span>
+          <img v-if="interaction.pin" :src="root + '/vendor/cl/interact/img/pin25.png'" alt="Pinned" width="17" height="25">
+          <img v-if="interaction.type === announce" :src="root + '/vendor/cl/interact/img/megaphone25.png'" alt="Annoucement" width="29" height="26">
+          {{interaction.summary}}
+        </h3>
+        <p class="cl-attribution">{{interactionLabel}} {{interaction.by}} / <span v-html="interaction.attribution"></span>
+        </p>
+        <div ref="message" v-html="displayMessage"></div>
+        <div class="cl-history" v-for="history in interaction.history" :key="history.time">{{showHistory(history)}}</div>
+    </div>
+    <div v-else>
+      <h3 class="cl-interaction-heading">Editing Interaction</h3>
+      <interaction-form :data="data" :interaction="interaction" @submit="submit" @cancel="cancel"></interaction-form>
+    </div>
   </div>
 </template>
 
 <script>
+	import Dialog from 'dialog-cl';
   import {Interaction} from '../Models/Interaction';
   import {TimeFormatter} from 'site-cl/js/TimeFormatter';
+  import MenuVue from 'site-cl/js/UI/Menu.vue';
+  import {Member} from 'course-cl/js/Members/Member';
+  import InteractionFormVue from './InteractionForm.vue';
+  import MaskVue from 'site-cl/js/Vue/Mask.vue';
 
   export default {
-      props: ['interaction'],
+      props: ['interaction', 'data'],
       data: function() {
           return {
-              root: Site.root,
-              interactionLabel: '',
-              announce: Interaction.ANNOUNCEMENT,
-              date: ''
+	          root: Site.root,
+	          interactionLabel: '',
+	          announce: Interaction.ANNOUNCEMENT,
+	          date: '',
+	          user: this.$store.state.user.user,
+	          staff: false,
+	          self: false,
+	          editing: false,
+	          mask: false,
+            displayMessage: '',
+
+	          FOLLOWING: Interaction.FOLLOWING,
+	          NOTFOLLOWING: Interaction.NOTFOLLOWING,
+	          NEVERFOLLOW: Interaction.NEVERFOLLOW
           }
       },
+      watch: {
+      	interaction() {
+      		this.editing = false;
+      		this.take();
+        }
+      },
+      components: {
+      	clMenu: MenuVue,
+        interactionForm: InteractionFormVue,
+	      maskVue: MaskVue
+      },
       mounted() {
-          console.log(this.interaction);
-          if(this.interaction.private) {
-            if(this.interaction.type === Interaction.ANNOUNCEMENT) {
-                this.interactionLabel = 'Private announcement by';
-            } else {
-                this.interactionLabel = 'Private question by';
-            }
-          } else {
-              if(this.interaction.type === Interaction.ANNOUNCEMENT) {
-                  this.interactionLabel = 'Announcement by';
-              } else {
-                  this.interactionLabel = 'Question by';
-              }
-          }
+	      this.staff = this.user.atLeast(Member.STAFF);
+	      this.take();
+      },
+      methods: {
+      	take() {
+	        this.self = this.interaction.by === 'Me';
 
-          this.date = TimeFormatter.relativeUNIX(this.interaction.created, null, 'ddd, M-DD-YYYY h:mm:ssa'); //  TimeFormatter.absoluteUNIX(this.interaction.created, 'short');
+	        if(this.interaction.private) {
+		        if(this.interaction.type === Interaction.ANNOUNCEMENT) {
+			        this.interactionLabel = 'Private announcement by';
+		        } else {
+			        this.interactionLabel = 'Private question by';
+		        }
+	        } else {
+		        if(this.interaction.type === Interaction.ANNOUNCEMENT) {
+			        this.interactionLabel = 'Announcement by';
+		        } else {
+			        this.interactionLabel = 'Question by';
+		        }
+	        }
+
+	        this.date = TimeFormatter.relativeUNIX(this.interaction.created, null, 'ddd, M-DD-YYYY h:mm:ssa');
+
+	        //
+	        // Find the @ links and wrap them in an a tag
+	        //
+	        const re = /@([0-9]+)/g;
+	        this.displayMessage = this.interaction.message.replace(re, '<a class="cl-interact-link" data-value="$1">$&</a>')
+
+	        this.$nextTick(function() {
+		        const elements = this.$refs.message.querySelectorAll('a.cl-interact-link');
+		        for(let element of elements) {
+			        element.onclick = (event) => {
+				        this.$emit('select', event.target.dataset.value);
+			        }
+		        }
+
+	        });
+        },
+      	deleteMe() {
+	        new Dialog.MessageBox('Are you sure?', 'Are you sure you want to delete this interaction?',
+		        Dialog.MessageBox.OKCANCEL, () => {
+	        	  Site.api.post('/api/interact/interaction/' + this.interaction.id + '/delete', {})
+	        	      .then((response) => {
+	        	          if (!response.hasError()) {
+	        	              this.$emit('deleted', this.interaction);
+	        	          } else {
+	        	              Site.toast(this, response);
+	        	          }
+
+	        	      })
+	        	      .catch((error) => {
+	        	          Site.toast(this, error);
+	        	      });
+		        });
+
+        },
+        editMe() {
+      		this.editing = true;
+        },
+        cancel() {
+      		this.editing = false;
+        },
+        submit(data) {
+	        this.mask = true;
+
+	        Site.api.post('/api/interact/interaction/' + this.interaction.id + '/edit', data)
+		        .then((response) => {
+			        this.mask = false;
+
+			        if (!response.hasError()) {
+		            this.editing = false;
+				        const interaction = new Interaction(response.getData('interaction').attributes);
+				        this.$emit('reloaded', interaction);
+			        } else {
+				        Site.toast(this, response);
+			        }
+
+		        })
+		        .catch((error) => {
+			        this.mask = false;
+			        Site.toast(this, error);
+		        });
+        },
+	      showHistory(history) {
+		      if(history.op === 'edit') {
+			      const time = TimeFormatter.relativeUNIX(history.time, null, 'ddd, M-DD-YYYY h:mm:ssa');
+			      return `Edited ${time} by ${history.by}`;
+		      }
+	      },
+        follow() {
+      		console.log('follow');
+	        Site.api.post('/api/interact/interaction/' + this.interaction.id + '/follow', {})
+		        .then((response) => {
+			        if (!response.hasError()) {
+				        const interaction = new Interaction(response.getData('interaction').attributes);
+				        console.log(interaction);
+				        this.$emit('reloaded', interaction);
+			        } else {
+				        Site.toast(this, response);
+			        }
+
+		        })
+		        .catch((error) => {
+			        Site.toast(this, error);
+		        });
+
+        }
       }
   }
 </script>

@@ -5,7 +5,7 @@
 
 import {InteractionSummary} from './InteractionSummary';
 
-export const Summaries = function() {
+export const Summaries = function(data) {
     this.summaries = [];
     this.more = false;
 
@@ -33,20 +33,40 @@ export const Summaries = function() {
 
         // And sort
         this.summaries.sort((a, b) => {
-            if(a.pin && !b.pin) {
+            if(a.pin && (!b.pin)) {
                 return -1;
             }
 
-            if(!a.bin && b.pin) {
+            if((!a.pin) && b.pin) {
                 return 1;
             }
 
             return b.time - a.time;
         });
+
     }
 
-    this.fetch = function() {
+    this.remove = function(summary) {
+	    // Does this summary exist?
+	    for(let i in this.summaries) {
+		    if(this.summaries[i].id === summary.id) {
+			    this.summaries.splice(i, 1);
+			    return true;
+		    }
+	    }
+
+	    return false;
+    }
+
+    this.fetch = function(fetched) {
         let query = {};
+
+	    if(data.categories.length === 1) {
+		    query = {
+			    assign: data.categories[0].tag,
+			    section: data.section
+		    };
+	    }
 
         if(this.oldestTime !== 0) {
             query.before = this.oldestTime;
@@ -58,7 +78,6 @@ export const Summaries = function() {
                 if (!response.hasError()) {
                     const summaries = response.getData('interact-summaries');
                     if(summaries !== null) {
-                        console.log(summaries);
                         for(let summary of summaries.attributes) {
                             if(summary.more === true) {
                                 this.more = true;
@@ -67,6 +86,8 @@ export const Summaries = function() {
 
                             this.add(new InteractionSummary(summary));
                         }
+
+                        fetched();
                     }
                 } else {
                     Site.toast(this, response);
@@ -76,5 +97,16 @@ export const Summaries = function() {
             .catch((error) => {
                 Site.toast(this, error);
             });
+    }
+
+    this.get = function(id) {
+	    // Does this summary exist?
+	    for(let i in this.summaries) {
+		    if(this.summaries[i].id === id) {
+			    return this.summaries[i];
+		    }
+	    }
+
+	    return null;
     }
 }

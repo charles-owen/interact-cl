@@ -1,19 +1,28 @@
 <?php
 /**
  * @file
- * Interact file for constants and any custom configuration
+ * Interact class for constants, common functions, and any custom configuration
  */
 
 namespace CL\Interact;
 
 use CL\Users\User;
 
+/**
+ * Interact class for constants, common functions, and any custom configuration
+ */
 class Interact {
 	/// Member MetaData category
 	const INTERACT_CATEGORY = 'interact';
 
     /// MetaData key for determining if staff member receives Interact email
     const RECEIVE_MAIL = "email";
+
+    /// MetaData key for interaction or discussion history
+	const HISTORY = 'history';
+
+	/// MetaData category for discussion endorsements
+	const ENDORSEMENTS = 'endorse';
 
     /**
      * Add a canned text item to Interact
@@ -35,6 +44,13 @@ class Interact {
 		return array('general' => 'General Course');
 	}
 
+	/**
+	 * Sanitize an HTML post.
+	 *
+	 * Uses HTML purifier to ensure not script tags or other dangerous content.
+	 * @param string $str HTML to sanitize
+	 * @return string HTML
+	 */
 	public static function sanitize($str) {
 		// Only allow certain tags (no scripts for example)
 		$str = strip_tags($str, '<code><span><div><label><a><br><p><b><i><del><strike><u><img><video><audio><iframe><param><blockquote><mark><cite><small><ul><ol><li><hr><dl><dt><dd><sup><sub><big><pre><code><figure><figcaption><strong><em><table><tr><td><th><tbody><thead><tfoot><h1><h2><h3><h4><h5><h6>');

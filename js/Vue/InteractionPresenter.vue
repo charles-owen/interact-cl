@@ -1,7 +1,7 @@
 <template>
   <div v-if="interaction !== null">
-    <interaction :interaction="interaction"></interaction>
-    <discussions :interaction="interaction"></discussions>
+    <interaction :data="data" :interaction="interaction" @reloaded="reloaded" @deleted="deleted" @select="select"></interaction>
+    <discussions :interaction="interaction" @reloaded="reloaded" @select="select"></discussions>
   </div>
 </template>
 
@@ -16,7 +16,7 @@
 
 
   export default {
-      props: ['summary'],
+      props: ['selected', 'data'],
       data: function() {
           return {
               root: Site.root,
@@ -24,7 +24,7 @@
           }
       },
       watch: {
-          summary: function() {
+	      selected: function() {
               this.fetch();
           }
       },
@@ -37,30 +37,36 @@
       },
       methods: {
           fetch() {
-              this.interaction = null;
-
-              if(this.summary === null) {
+              if(this.selected === 0) {
+	                this.interaction = null;
                   return;
               }
 
-              let params = {
-
-              }
-              Site.api.get('/api/interact/interaction/' + this.summary.id, params)
+              Site.api.get('/api/interact/interaction/' + this.selected, {})
                   .then((response) => {
                       if (!response.hasError()) {
                          this.interaction = new Interaction(response.getData('interaction').attributes);
-
-                         console.log(this.interaction);
-
+                         this.$emit('reloaded', this.interaction);
                       } else {
+	                        this.interaction = null;
                           Site.toast(this, response);
                       }
 
                   })
                   .catch((error) => {
-                      Site.toast(this, error);
+              	    this.interaction = null;
+                    Site.toast(this, error);
                   });
+          },
+          deleted(interaction) {
+          	  this.$emit('deleted', interaction);
+          },
+          reloaded(interaction) {
+          	this.interaction = interaction;
+          	this.$emit('reloaded', interaction);
+          },
+          select(id) {
+          	this.$emit('select', id);
           }
       }
   }

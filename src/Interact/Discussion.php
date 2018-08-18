@@ -14,12 +14,19 @@ use CL\Users\User;
  * Class that represents a single discussion item in an interaction
  *
  * This class represents records in the discussion table
+ *
+ * @cond
+ * @property int interactId
+ * @endcond
  */
-class Discussion extends InteractContent
-{
+class Discussion extends InteractContent {
 
-	public function __construct($row = null, $prefix = '')
-	{
+	/**
+	 * Discussion constructor.
+	 * @param array $row Table row
+	 * @param string $prefix Prefix for discussion table column names.
+	 */
+	public function __construct(array $row = null, $prefix = '') {
 		parent::__construct($row, $prefix);
 
 		if ($row !== null) {
@@ -33,6 +40,7 @@ class Discussion extends InteractContent
 	 * <b>Properties</b>
 	 * Property | Type | Description
 	 * -------- | ---- | -----------
+	 * interactId | int | The Interaction ID for this discussion item.
 	 *
 	 * @param string $property Property name
 	 * @return mixed
@@ -54,6 +62,7 @@ class Discussion extends InteractContent
 	 * <b>Properties</b>
 	 * Property | Type | Description
 	 * -------- | ---- | -----------
+	 * interactId | int | The Interaction ID for this discussion item.
 	 *
 	 * @param string $property Property name
 	 * @param mixed $value Value to set
@@ -82,22 +91,20 @@ class Discussion extends InteractContent
 
 		$data['interactId'] = $this->interactId;
 		$data['message'] = $this->message;
+		$data['history'] = $this->historyData($user);
+
+		$endorsements = $this->meta->get(Interact::ENDORSEMENTS);
+		$endorsementData = [];
+		foreach($endorsements as $endorsement) {
+			$endorsementData[] = $endorsement;
+		}
+
+		if(count($endorsementData) > 0) {
+			$data['endorse'] = $endorsementData;
+		}
 
 		return $data;
 	}
-
-
-//	/**
-//	 * Update a discussion
-//	 * @param $html New HTML content
-//	 * @param array $post Data from $_POST
-//	 */
-//    public function update($html, array $post) {
-//        $this->set_html($html);
-//        $this->interactId = $post['interactid'];
-//    }
-
-
 
     private $interactId = 0;
 }

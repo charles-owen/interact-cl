@@ -1,6 +1,7 @@
 <?php
 /** @file
  * Course Assigment declarations
+ * @cond
  */
 
 use CL\Course\Assignments;
@@ -182,3 +183,6 @@ return function(Assignments $assignments) {
 //	$exams->add_assignment("exam1", "Exam 1", 50);
 //	$exams->add_assignment("exam2", "Exam 2", 50);
 };
+
+/// @endcond
+
