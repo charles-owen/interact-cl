@@ -3,7 +3,7 @@
     <div class="group">
     <p v-if="me !== null"><label><input type="checkbox" v-model="me.email" @change="change(me)"> Receive email on new Interacts!</label></p>
     </div>
-    <h3>Other Staff</h3>
+    <h3 v-if="tas.length > 0 || others.length > 0">Other Staff</h3>
     <div class="group">
     <p v-for="user in tas" :key="user.user.id"><label><input type="checkbox" v-model="user.email" @change="change(user)"> {{user.user.displayName()}}</label></p>
     </div>
@@ -27,7 +27,6 @@
           }
       },
       mounted() {
-
           Site.api.get('/api/interact/email', {})
               .then((response) => {
                   if (!response.hasError()) {
@@ -43,37 +42,36 @@
       },
       methods: {
           change(user) {
-              if(user.user.member.id === this.user.member.id) {
-                Site.api.post('/api/interact/email', {email: user.email})
-                    .then((response) => {
-                        if (!response.hasError()) {
-                            this.newResponse(response);
-                        } else {
-                            Site.toast(this, response);
-                        }
+		          if(user.user.member.id === this.user.member.id) {
+			          Site.api.post('/api/interact/email', {email: user.email})
+				          .then((response) => {
+					          if (!response.hasError()) {
+						          this.newResponse(response);
+					          } else {
+						          Site.toast(this, response);
+					          }
 
-                    })
-                    .catch((error) => {
-                        Site.toast(this, error);
-                    });
-              } else {
-                  Site.api.post('/api/interact/email/' + user.user.member.id, {email: user.email})
-                      .then((response) => {
-                          if (!response.hasError()) {
-                              this.newResponse(response);
-                          } else {
-                              Site.toast(this, response);
-                          }
+				          })
+				          .catch((error) => {
+					          Site.toast(this, error);
+				          });
+		          } else {
+			          Site.api.post('/api/interact/email/' + user.user.member.id, {email: user.email})
+				          .then((response) => {
+					          if (!response.hasError()) {
+						          this.newResponse(response);
+					          } else {
+						          Site.toast(this, response);
+					          }
 
-                      })
-                      .catch((error) => {
-                          Site.toast(this, error);
-                      });
-              }
+				          })
+				          .catch((error) => {
+					          Site.toast(this, error);
+				          });
+		          }
           },
           newResponse(response) {
               const data = response.getData('interact-email').attributes;
-
               const user = this.$store.state.user.user;
               this.user = user;
 

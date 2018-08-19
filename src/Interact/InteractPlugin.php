@@ -72,7 +72,7 @@ class InteractPlugin extends \CL\Site\Plugin {
 			$object->extend('interact_button', function($view, $args) {
 				$root = $this->site->root;
 				return <<<HTML
-<p class="control"><a href="$root/cl/interact" title="Interact! System">
+<p class="cl-home-control"><a href="$root/cl/interact" title="Interact! System">
 <img src="$root/vendor/cl/interact/img/linkbutton.png" width="100" height="25" alt="Interact! System"></a></p>
 HTML;
 			});

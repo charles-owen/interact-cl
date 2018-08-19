@@ -556,7 +556,6 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		$members = new Members($site->db);
 
-
 		if($server->requestMethod === 'POST') {
 			$post = $server->post;
 			$this->ensure($post, 'email');
@@ -565,17 +564,18 @@ class InteractApi extends \CL\Users\Api\Resource {
 				$this->isUser($site, Member::TA);
 
 				$memberId = +$params[1];
+
+				$member = $members->getAsUser($memberId);
+				if ($member === null) {
+					throw new APIException("Member does not exist");
+				}
+
+				$member->member->meta->set(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $post['email']);
+				$members->writeMetaData($member->member);
 			} else {
-				$memberId = $user->member->id;
+				$user->member->meta->set(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $post['email']);
+				$members->writeMetaData($user->member);
 			}
-
-			$member = $members->getAsUser($memberId);
-			if ($member === null) {
-				throw new APIException("Member does not exist");
-			}
-
-			$member->member->meta->set(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $post['email']);
-			$members->writeMetaData($member->member);
 		}
 
 		$ret = [];

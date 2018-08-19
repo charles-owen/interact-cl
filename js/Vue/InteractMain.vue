@@ -2,7 +2,7 @@
   <div class="cl-interact">
     <form class="search">
       <h2 class="cl-banner"><button @click.prevent="ask"><img :src="root + '/vendor/cl/interact/img/logo16.png'" width="16" height="16"> ¿Ask a Question?</button> Interact!
-        <span class="cl-search"><input type="text" placeholder="Search..." name="search"><button type="submit">Search</button></span>
+       <!-- <span class="cl-search"><input type="text" placeholder="Search..." name="search"><button type="submit">Search</button></span> -->
       </h2>
     </form>
     <div class="cl-interact-body">

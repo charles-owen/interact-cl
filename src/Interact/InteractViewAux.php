@@ -65,6 +65,7 @@ class InteractViewAux extends ViewAux {
 	 *
 	 * This creates the Interact! div and fills it with information that Interact needs.
 	 * @param bool $open If true, open Interact immediately.
+	 * @param string $id ID to use for the DIV, default is cl-interact
 	 * @return string HTML
 	 */
     public function present($open=false, $id='cl-interact') {
