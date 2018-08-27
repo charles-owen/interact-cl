@@ -1,4 +1,10 @@
 
+TODO: Interact Images
 TODO: Close discussion
+TODO: Display student ID for staff
+FUTURE: Ability to see and edit followers
 FUTURE: Ability to set section
 FUTURE: Ability to view deleted interactions and discussions
+FUTURE: Filter out or fix Unicode character in email
+TEST: Editing an interaction that has been deleted
+TEST: Okay if you paste in < and >?

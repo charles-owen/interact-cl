@@ -12,7 +12,7 @@ use CL\Site\System\Server;
 use CL\Course\AssignmentCategory;
 use CL\Course\Assignment;
 use CL\Site\Router;
-use CL\Course\Section;
+use CL\Course\Member;
 
 /**
  * Plugin class for the Interact! Subsystem
@@ -35,6 +35,7 @@ class InteractPlugin extends \CL\Site\Plugin {
 	 * @param Site $site The Site configuration object
 	 */
 	public function install(Site $site) {
+		$site->install('interact', $this);
 		$this->site = $site;
 	}
 
@@ -45,8 +46,8 @@ class InteractPlugin extends \CL\Site\Plugin {
 	 * @param Site $site The site configuration component
 	 */
 	public function ensureTables(Site $site) {
-//		$maker = new InteractTables($site->db);
-//		$maker->create(false);
+		$maker = new InteractTables($site->db);
+		$maker->create(false);
 	}
 
 	/**
@@ -70,6 +71,10 @@ class InteractPlugin extends \CL\Site\Plugin {
 			});
 		} else if($object instanceof \CL\Course\CourseHomeView) {
 			$object->extend('interact_button', function($view, $args) {
+				if(!$view->user->atLeast(Member::STUDENT)) {
+					return '';
+				}
+
 				$root = $this->site->root;
 				return <<<HTML
 <p class="cl-home-control"><a href="$root/cl/interact" title="Interact! System">
@@ -82,14 +87,20 @@ HTML;
 			});
 		} else if($object instanceof \CL\Course\AssignmentView) {
 			if($object->assignment->hasProperty('interact')) {
-				$sectionTag = ($object instanceof \CL\Step\StepSectionView) ?
-					$object->sectionTag : null;
+				if($object->user->atLeast(Member::STUDENT)) {
+					$sectionTag = ($object instanceof \CL\Step\StepSectionView) ?
+						$object->sectionTag : null;
 
-				$viewAux = new InteractViewAux([$object->tag], $sectionTag);
-				$object->add_aux($viewAux);
-				$object->beforeFooter = $viewAux->present();
+					$viewAux = new InteractViewAux([$object->tag], $sectionTag);
+					$object->add_aux($viewAux);
+					$object->beforeFooter = $viewAux->present();
+				}
 
 				$object->extend('interact_link', function(\CL\Course\AssignmentView $view, $args) {
+					if(!$view->user->atLeast(Member::STUDENT)) {
+						return;
+					}
+
 					$root = $view->root;
 					return <<<HTML
 <p class="cl-interact-link"><a href="#cl-interact"><img src="$root/vendor/cl/interact/img/link.png" width="82" height="16" alt="Interact!"> for this assignment</a></p>
