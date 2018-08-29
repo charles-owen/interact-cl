@@ -123,7 +123,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		if ($cmd === 'delete') {
 			if(!$user->atLeast(Member::STAFF)) {
-				if($discussion->user->id !== $user->id) {
+				if($discussion->user->id != $user->id) {
 					throw new APIException('Not authorized to delete this discussion item');
 				}
 			}
@@ -131,7 +131,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 			$discussions->delete($discussion);
 		} else if($cmd === 'edit') {
 			if(!$user->atLeast(Member::STAFF)) {
-				if($discussion->user->id !== $user->id) {
+				if($discussion->user->id != $user->id) {
 					throw new APIException('Not authorized to edit this discussion item');
 				}
 			}
@@ -213,7 +213,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 
 		if(!$user->atLeast(Member::STAFF)) {
-			if($interaction->private && $interaction->user->id !== $user->id) {
+			if($interaction->private && $interaction->user->id != $user->id) {
 				throw new APIException('Not authorized to discuss this interaction');
 			}
 		}
@@ -290,7 +290,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 		if($server->requestMethod === 'POST') {
 			if($interaction !== null && count($params) === 3 && $params[2] === 'delete') {
 				if(!$user->atLeast(Member::STAFF)) {
-					if($interaction->user->id !== $user->id) {
+					if($interaction->user->id != $user->id) {
 						throw new APIException('Not authorized to delete this interaction');
 					}
 				}
@@ -440,7 +440,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 		}
 
 		if(!$user->atLeast(Member::STAFF)) {
-			if($interaction->private && $interaction->user->id !== $user->id) {
+			if($interaction->private && $interaction->user->id != $user->id) {
 				throw new APIException('Not authorized to view this interaction');
 			}
 		}
