@@ -13,11 +13,13 @@ use CL\Course\AssignmentCategory;
 use CL\Course\Assignment;
 use CL\Site\Router;
 use CL\Course\Member;
+use CL\Site\Extendible;
+
 
 /**
  * Plugin class for the Interact! Subsystem
  */
-class InteractPlugin extends \CL\Site\Plugin {
+class InteractPlugin extends \CL\Site\Plugin implements \CL\Site\IExtension {
 	/**
 	 * A tag that represents this plugin
 	 * @return string A tag like 'course', 'users', etc.
@@ -82,9 +84,7 @@ class InteractPlugin extends \CL\Site\Plugin {
 HTML;
 			});
 		} else if($object instanceof \CL\Course\Assignment) {
-			$object->extend('use_interact', function(\CL\Course\Assignment $assignment, $args) {
-				$assignment->addProperty('interact', 'true');
-			});
+			$object->extend('use_interact', $this);
 		} else if($object instanceof \CL\Course\AssignmentView) {
 			if($object->assignment->hasProperty('interact')) {
 				if($object->user->atLeast(Member::STUDENT)) {
@@ -112,6 +112,21 @@ HTML;
 		} else if($object instanceof ConsoleView) {
 			$object->addJS('interact');
 		}
+	}
+
+	/**
+	 * @param Extendible $extendible Extendible that is calling this function
+	 * @param string $name Name of the function
+	 * @param array $arguments Arguments to the function
+	 * @return mixed
+	 */
+	public function extension(Extendible $extendible, $name, array $arguments) {
+		if($name !== 'use_interact') {
+			return;
+		}
+
+		$assignment = $extendible;
+		$assignment->addProperty('interact', 'true');
 	}
 
 	private $site;
