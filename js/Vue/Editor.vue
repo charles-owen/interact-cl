@@ -6,11 +6,11 @@
 </template>
 
 <script>
-    import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+    import ClassicEditor from 'ckeditor5-cl';
     import '../../sass/ckeditor/_ck.scss';
 
     export default {
-        props: ['prompt', 'value', 'discussion'],
+        props: ['prompt', 'value', 'discussion', 'canned'],
         data: function() {
             return {
                 active: false
@@ -20,7 +20,6 @@
             if(this.discussion !== true) {
                 this.makeActive();
             }
-
         },
         methods: {
             makeActive() {
@@ -28,10 +27,23 @@
                     return;
                 }
 
+                let toolbar = ['bold', 'italic', 'heading', 'undo', 'redo', 'link', 'bulletedList', 'numberedList'];
+                if(this.canned !== undefined) {
+                	toolbar.push('canned');
+                }
+
+                let options = {
+                	toolbar: toolbar
+                }
+
+                if(this.canned !== undefined) {
+                  options.canned = {
+                  	options: this.canned
+                  }
+                }
+
                 ClassicEditor
-                    .create( this.$refs['textarea'], {
-                        toolbar: ['bold', 'italic', 'heading', 'undo', 'redo', 'link', 'bulletedList', 'numberedList']
-                    })
+                    .create( this.$refs['textarea'], options)
                     .then( editor => {
                         this.editor = editor;
                         editor.setData(this.value);

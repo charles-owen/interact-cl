@@ -34,6 +34,7 @@ class InteractViewAux extends ViewAux {
      * @param View $view View we are installing into
      */
     public function install(View $view) {
+    	$this->user = $view->user;
 	    $this->categoriesSet($view->section);
 
 	    if($view->site->installed('grades') &&
@@ -44,20 +45,13 @@ class InteractViewAux extends ViewAux {
 		//
 	    // Does the file interact.php exist in the config directory?
 	    //
-	    $configFile = $view->site->root . '/' . $view->site->config . "/interact.php";
+	    $configFile = $view->site->rootDir . '/' . $view->site->config . "/interact.php";
 	    $config  = @include $configFile;
 	    if($config !== false && is_callable($config)) {
 		    $config($this->interact);
 	    }
 
 	    $view->addJS('interact');
-
-//        $view->add_js('js/ckeditor/ckeditor.js');
-//        $view->add_js_timestamped($interactJs);
-//        $view->add_css('interact/ck_interact.css');
-//        $view->add_css('interact/ck_interact_content.css');
-//        $view->js = "var INTERACT = new Interact();\n";
-
     }
 
 	/**
@@ -72,7 +66,8 @@ class InteractViewAux extends ViewAux {
     	$data = [
     		'open'=>$open,
 		    'categories'=>$this->categoriesData,
-		    'section'=>$this->sectionTag
+		    'section'=>$this->sectionTag,
+		    'interact'=>$this->interact->data($this->user)
 	    ];
 
 		if($this->gradingLink !== null) {
@@ -134,6 +129,7 @@ HTML;
 
 	private $interact;
 
+	private $user = null;           // User we are displaying for
 	private $categories;            // Categories we will look at or null if none provided, meaning use a chooser
 	private $sectionTag;            // Optional section tag
 	private $categoriesData = [];   // Categories data send to the client

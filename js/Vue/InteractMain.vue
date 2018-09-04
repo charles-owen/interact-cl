@@ -26,12 +26,16 @@
   import WelcomeVue from './Welcome.vue';
   import {Summaries} from '../Models/Summaries';
 
+  /**
+   * Interact main window
+   * @constructor InteractMainVue
+   */
   export default {
       props: ['data', 'id'],
       data: function() {
           return {
               root: Site.root,
-              summaries: new Summaries(),
+              summaries: null,
               selected: 0,        // Currently selected interaction ID, 0 if none
               composing: false   // True if we are entering a new interaction
           }
@@ -49,6 +53,7 @@
       },
       created() {
       	this.summaries = new Summaries(this.data);
+      	this.$interact.summaries = this.summaries;
       },
       mounted() {
         this.summaries.fetch(() => {
@@ -58,6 +63,11 @@
 	          this.selectFirst();
           }
         });
+
+	      this.$interact.startPolling();
+      },
+      beforeDestroy() {
+        this.$interact.endPolling();
       },
       methods: {
       	selectFirst() {

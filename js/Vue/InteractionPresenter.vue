@@ -1,15 +1,15 @@
 <template>
   <div v-if="interaction !== null">
     <interaction :data="data" :interaction="interaction" @reloaded="reloaded" @deleted="deleted" @select="select"></interaction>
-    <discussions :interaction="interaction" @reloaded="reloaded" @select="select"></discussions>
+    <discussions :data="data" :interaction="interaction" @reloaded="reloaded" @select="select"></discussions>
   </div>
 </template>
 
 <script>
-    /**
-     * @file
-     * The right side/interaction view
-     */
+  /**
+   * The right side/interaction view
+   * @constructor InteractPresenterVue
+   */
   import {Interaction} from '../Models/Interaction';
   import DiscussionsVue from './Discussions.vue';
   import InteractionVue from './Interaction.vue';

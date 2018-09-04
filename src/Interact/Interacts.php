@@ -6,7 +6,10 @@
 
 namespace CL\Interact;
 
+use CL\Course\Member;
 use CL\Course\Members;
+use CL\Site\Site;
+use CL\Users\User;
 
 /**
  * Table class implementing the table interact
@@ -14,6 +17,10 @@ use CL\Course\Members;
  * This is the main table for the Interact course discussion system.
  */
 class Interacts extends \CL\Tables\Table {
+	/// Maximum summary replies per query
+	const MAX_SUMMARIES = 100;
+
+
 	/**
 	 * Constructor
 	 * @param \CL\Tables\Config $config The Database configuration object
@@ -343,6 +350,64 @@ SQL;
 
 		$stmt = $pdo->prepare($sql);
 		$stmt->execute([$interaction->id]);
+	}
+
+	/**
+	 * /api/interact/summaries
+	 *
+	 * GET gets summaries of interactions
+	 *
+	 * @param Site $site
+	 * @param User $user
+	 * @param array $get Parameters for the query
+	 * @return array
+	 */
+	public function summariesData(Site $site, User $user, $get) {
+		$query = [
+			'semester'=>$user->member->semester,
+			'section'=>$user->member->sectionId
+		];
+
+		if(!empty($get['assign'])) {
+			$query['assignTag'] = $get['assign'];
+		}
+
+		if(!empty($get['section'])) {
+			$query['sectionTag'] = $get['section'];
+		}
+
+		if(!$user->atLeast(Member::STAFF)) {
+			$query['privateMember'] = $user->member->id;
+		}
+
+		$limit = self::MAX_SUMMARIES;
+		if(!empty($get['limit'])) {
+			if($get['limit'] < $limit) {
+				$limit = $get['limit'];
+			}
+		}
+
+		$query['limit'] = $limit + 1;
+		if(!empty($get['before'])) {
+			$query['before'] = +$get['before'];
+		}
+
+		if(!empty($get['after'])) {
+			$query['after'] = +$get['after'];
+		}
+
+		$summaries = $this->summaries($query);
+
+		$data = [];
+		for($i=0; $i<count($summaries) && $i<$limit; $i++) {
+			$data[] = $summaries[$i]->summaryData($site, $user);
+		}
+
+		if(count($summaries) > $limit) {
+			$data[] = ['more'=>true];
+		}
+
+		return $data;
 	}
 
 

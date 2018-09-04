@@ -2,7 +2,8 @@
 tests/config.php
 /html
 /vendor
-
+/node_modules
+_notes
 
 # compiled output
 /dist
@@ -47,3 +48,4 @@ Thumbs.db
 /doc/latex
 /doc/rtf
 /doc/*.tmp
+/doc/js

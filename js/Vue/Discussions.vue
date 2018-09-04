@@ -4,7 +4,7 @@
     <discussion v-for="discussion in interaction.discussions" :key="discussion.id"
                 :discussion="discussion" @reloaded="reloaded" @select="select"></discussion>
 
-    <new-discussion :interaction="interaction" @reloaded="reloaded"></new-discussion>
+    <new-discussion :data="data" :interaction="interaction" @reloaded="reloaded"></new-discussion>
   </div>
 </template>
 
@@ -13,7 +13,7 @@
     import DiscussionVue from './Discussion.vue';
 
     export default {
-        props: ['interaction'],
+        props: ['data', 'interaction'],
         data: function () {
             return {
                 root: Site.root

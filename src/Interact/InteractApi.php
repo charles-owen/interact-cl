@@ -455,6 +455,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 	/**
 	 * /api/interact/summaries
+	 * /api/interact/summaries/stats
 	 *
 	 * GET gets summaries of interactions
 	 *
@@ -469,24 +470,24 @@ class InteractApi extends \CL\Users\Api\Resource {
 		$interacts = new Interacts($site->db);
 		$get = $server->get;
 
-		$query = [
-			'semester'=>$user->member->semester,
-			'section'=>$user->member->sectionId
-		];
-
-		if(!empty($get['assign'])) {
-			$query['assignTag'] = $get['assign'];
-		}
-
-		if(!empty($get['section'])) {
-			$query['sectionTag'] = $get['section'];
-		}
-
-		if(!$user->atLeast(Member::STAFF)) {
-			$query['privateMember'] = $user->member->id;
-		}
-
 		if(count($params) === 2 && $params[1] === 'stats') {
+			$query = [
+				'semester'=>$user->member->semester,
+				'section'=>$user->member->sectionId
+			];
+
+			if(!empty($get['assign'])) {
+				$query['assignTag'] = $get['assign'];
+			}
+
+			if(!empty($get['section'])) {
+				$query['sectionTag'] = $get['section'];
+			}
+
+			if(!$user->atLeast(Member::STAFF)) {
+				$query['privateMember'] = $user->member->id;
+			}
+
 			$questions = 0;
 			$announcements = 0;
 
@@ -506,28 +507,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 			return $json;
 		}
 
-		$limit = self::MAX_SUMMARIES;
-		if(!empty($get['limit'])) {
-			if($get['limit'] < $limit) {
-				$limit = $get['limit'];
-			}
-		}
-
-		$query['limit'] = $limit + 1;
-		if(!empty($get['before'])) {
-			$query['before'] = +$get['before'];
-		}
-
-		$summaries = $interacts->summaries($query);
-
-		$data = [];
-		for($i=0; $i<count($summaries) && $i<$limit; $i++) {
-			$data[] = $summaries[$i]->summaryData($site, $user);
-		}
-
-		if(count($summaries) > $limit) {
-			$data[] = ['more'=>true];
-		}
+		$data = $interacts->summariesData($site, $user, $get);
 
 		$json = new JsonAPI();
 		$json->addData('interact-summaries', 0, $data);

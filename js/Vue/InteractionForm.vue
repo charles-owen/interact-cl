@@ -16,7 +16,7 @@
 
     <p class="cl-summary"><label>{{typeName}} Summary:
       <input ref="summary" v-model="summary" class="summary" type="text" :placeholder="'A short summary of your ' + typeName.toLowerCase()" value=""></label></p>
-    <interact-editor :prompt="typeName + ':'" v-model="text"></interact-editor>
+    <interact-editor :prompt="typeName + ':'" :canned="data.interact.canned" v-model="text"></interact-editor>
     <p><input type="submit" value="Post"> <input type="button" value="Cancel" @click.prevent="cancel">
       <label v-if="data.categories.length !== 1">Category: <select v-model="category">
         <option v-for="category in data.categories" :value="category.tag" :key="category.tag">{{category.name}}</option>

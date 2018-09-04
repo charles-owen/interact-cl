@@ -3,7 +3,7 @@
     <mask-vue :mask="mask">Communicating with server...</mask-vue>
     <h4 class="discuss-heading">Contribute to the discussion</h4>
     <form method="post" @submit.prevent="submit">
-      <component ref="editor" :is="editor" v-model="text" :discussion="true"></component>
+      <component ref="editor" :is="editor" v-model="text" :discussion="true" :canned="data.interact.canned"></component>
       <p><input type="submit" value="Post"></p>
     </form>
   </div>
@@ -15,7 +15,7 @@
   import {Interaction} from '../Models/Interaction';
 
   export default {
-      props: ['interaction'],
+      props: ['data', 'interaction'],
       data: function() {
           return {
               text: '',
@@ -27,7 +27,6 @@
           maskVue: MaskVue
       },
       mounted() {
-      	console.log(EditorVue);
       },
       methods: {
           submit() {

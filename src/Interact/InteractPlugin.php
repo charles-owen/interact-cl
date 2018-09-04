@@ -14,7 +14,7 @@ use CL\Course\Assignment;
 use CL\Site\Router;
 use CL\Course\Member;
 use CL\Site\Extendible;
-
+use CL\Site\Api\JsonAPI;
 
 /**
  * Plugin class for the Interact! Subsystem
@@ -71,6 +71,14 @@ class InteractPlugin extends \CL\Site\Plugin implements \CL\Site\IExtension {
 				$resource = new InteractApi();
 				return $resource->apiDispatch($site, $server, $params, $properties, $time);
 			});
+
+			$router->addPolling(function(Site $site, Server $server, $post, JsonAPI $json, $time) {
+				if(isset($post['interact'])) {
+					$polling = new InteractPolling();
+					$polling->poll($site, $server, $post['interact'], $json, $time);
+				}
+			});
+
 		} else if($object instanceof \CL\Course\CourseHomeView) {
 			$object->extend('interact_button', function($view, $args) {
 				if(!$view->user->atLeast(Member::STUDENT)) {

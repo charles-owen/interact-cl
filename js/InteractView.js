@@ -1,8 +1,16 @@
 import InteractClosedVue from './Vue/InteractClosed.vue';
 import InteractMainVue from './Vue/InteractMain.vue';
 
-
-export const InteractView = function(site, element) {
+/**
+ * Interact when presented as an element on an existing page.
+ *
+ * See InteractPageView for presentation as a complete page.
+ * @param {Site} site
+ * @param {Interact} interact Interact object
+ * @param {Element} element
+ * @constructor
+ */
+export const InteractView = function(site, interact, element) {
 
     let template = `<div id="cl-interact"><component :is="current" @open="open" :data="data"></component></div>`;
 
@@ -12,7 +20,9 @@ export const InteractView = function(site, element) {
 
     new site.Vue({
         el: element,
+	    site,
         store,
+	    interact,
         data: function () {
             return {
                 data: data,

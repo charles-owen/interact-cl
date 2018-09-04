@@ -1,14 +1,21 @@
-/**
- * @file
- * Install into the Interact console system.
+/*
+ * Install into the console.
  */
 
 import ControlPanelVue from './ControlPanel.vue';
 import {Member} from 'course-cl/js/Members/Member'
 
+/**
+ * Installer for the Interact console components
+ * @constructor
+ */
 export const InteractConsole = function() {
 }
 
+/**
+ * Install the Interact console components
+ * @param {Console} Console
+ */
 InteractConsole.install = function(Console) {
 
     const page = {title: 'Main', route: '', order: 1};

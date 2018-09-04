@@ -1,5 +1,4 @@
-/**
- * @file
+/*
  * Interaction summary for the left side (iteractions/item listing)
  */
 

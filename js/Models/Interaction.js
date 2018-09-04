@@ -1,12 +1,14 @@
-/**
- * @file
- * Model for an interaction in the system.
- *
- * Complete presentation as on the right hand side
- */
+
 
 import {Discussion} from './Discussion';
 
+/**
+ * Model for an interaction in the system.
+ *
+ * Complete presentation as on the right hand side
+ * @param {object} data Data from the server
+ * @constructor
+ */
 export const Interaction = function(data) {
     this.id = data.id;
     this.pin = data.pin;
@@ -36,13 +38,18 @@ export const Interaction = function(data) {
     }
 }
 
-/// User question expecting an answer
+/** User question expecting an answer */
 Interaction.QUESTION = 'Q';
 
-/// Announcement
+/** Announcement */
 Interaction.ANNOUNCEMENT = 'A';
 
-Interaction.FOLLOWING = 'F';          ///< User is following the interaction
-Interaction.NOTFOLLOWING = 'N';       ///< User is not following
-Interaction.NEVERFOLLOW = 'X';        ///< User will never follow
+/** User is following the interaction */
+Interaction.FOLLOWING = 'F';
+
+/** User is not following */
+Interaction.NOTFOLLOWING = 'N';
+
+/** User will never follow */
+Interaction.NEVERFOLLOW = 'X';
 

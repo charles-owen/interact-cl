@@ -1,6 +1,16 @@
 import InteractMainVue from './Vue/InteractMain.vue';
 
-export const InteractPageView = function(site, element) {
+/**
+ * Interact when presented as a complete Vue-based page.
+ *
+ * This version includes the header and footer and supports routing.
+ * See InteractView for Interact added to a page.
+ * @param {Site} site
+ * @param {Interact} interact Interact object
+ * @param {Element} element
+ * @constructor
+ */
+export const InteractPageView = function(site, interact, element) {
 	let template = `<div id="cl-interact" class="cl-interact-page"><site-header title="Interact!"></site-header>
 <div class="content"></div>
 <router-view :data="data"></router-view>
@@ -26,8 +36,10 @@ export const InteractPageView = function(site, element) {
 
 	new site.Vue({
 		el: element,
+		site,
 		store,
 		router,
+		interact,
 		data: function () {
 			return {
 				data: data
@@ -38,8 +50,6 @@ export const InteractPageView = function(site, element) {
 			'site-footer': Footer
 		},
 		template: template,
-		created() {
-		},
 		methods: {
 
 		}

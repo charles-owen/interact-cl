@@ -63,6 +63,13 @@ class Interact {
 	}
 
 
+	public function data(User $user) {
+		$data = [];
+		if($user->staff && count($this->canned) !== 0) {
+			$data['canned'] = $this->canned;
+		}
+		return $data;
+	}
 
 //    /**
 //     * Generate JavasScript necessary for this configuration

@@ -26,7 +26,13 @@
 
 
 <script>
-	import Dialog from 'dialog-cl';
+	/**
+   * Discussion Vue component
+   *
+   * Presents a single discussion item with editing options
+   * @constructor DiscussionVue
+   */
+  import Dialog from 'dialog-cl';
 	import {TimeFormatter} from 'site-cl/js/TimeFormatter';
 	import MenuVue from 'site-cl/js/UI/Menu.vue'
 	import {Member} from 'course-cl/js/Members/Member';

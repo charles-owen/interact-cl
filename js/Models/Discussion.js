@@ -1,8 +1,9 @@
-/**
- * @file
- * Discussion item
- */
 
+/**
+ * Discussion item
+ * @param {object} data Data from the server
+ * @constructor
+ */
 export const Discussion = function(data) {
     this.id = data.id;
     this.time = data.time;
