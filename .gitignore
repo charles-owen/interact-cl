@@ -4,6 +4,7 @@ tests/config.php
 /vendor
 /node_modules
 _notes
+yarn-error.log
 
 # compiled output
 /dist
