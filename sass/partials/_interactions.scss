@@ -72,16 +72,30 @@ div.cl-interactions {
     font-style: italic;
   }
 
-
-  .noresponse {
-    background-color: $noresponse;
+  div.cl-interact-summary.cl-pending {
+    background-color: $pending;
   }
 
-  .noresponse.selected {
-    background-color: $noresponseselected;
+  div.cl-interact-summary.cl-resolved {
+    background-color: $resolved;
+  }
+
+  div.cl-interact-summary.cl-closed {
+    background-color: $closed;
+  }
+
+  div.cl-interact-summary.cl-answered {
+    background-color: $answered;
+  }
+
+  div.cl-interact-summary.cl-pending.cl-escalated {
+    background-color: $pending-escalated;
   }
 
   div.cl-interact-summary.cl-selected {
-    background-color: $selected;
+    border-left: 3px solid $selected-top;
+    border-top: 3px solid $selected-top;
+    border-right: 3px solid $selected-bot;
+    border-bottom: 3px solid $selected-bot;
   }
 }

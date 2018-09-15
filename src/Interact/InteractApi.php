@@ -12,6 +12,7 @@ use CL\Site\Api\APIException;
 use CL\Users\User;
 use CL\Course\Member;
 use CL\Course\Members;
+use CL\Users\Users;
 
 
 /**
@@ -20,6 +21,9 @@ use CL\Course\Members;
 class InteractApi extends \CL\Users\Api\Resource {
 	/// Maximum summary replies per query
 	const MAX_SUMMARIES = 100;
+
+	/// How long in the future before autoanswers are returned?
+	const FUTURE_ANSWER = 5;
 
 	/**
 	 * InteractApi constructor.
@@ -41,11 +45,11 @@ class InteractApi extends \CL\Users\Api\Resource {
 	public function dispatch(Site $site, Server $server, array $params, array $properties, $time) {
 		$user = $this->isUser($site, Member::STUDENT);
 
-		if(count($params) < 1) {
+		if (count($params) < 1) {
 			throw new APIException("Invalid API Path", APIException::INVALID_API_PATH);
 		}
 
-		switch($params[0]) {
+		switch ($params[0]) {
 			// /api/interact/summaries
 			// /api/interact/summaries/stats
 			case 'summaries':
@@ -70,6 +74,10 @@ class InteractApi extends \CL\Users\Api\Resource {
 			case 'discussion':
 				return $this->discussion($site, $user, $server, $params, $time);
 
+			// /api/interact/active/:instance
+			case 'active':
+				return $this->active($site, $user, $server, $params, $time);
+
 			// /api/interact/email
 			// /api/interact/email/:memberid
 			case 'email':
@@ -82,6 +90,40 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		throw new APIException("Invalid API Path", APIException::INVALID_API_PATH);
 	}
+
+	/**
+	 * /api/interact/active/:instance
+	 *
+	 * Indicate a browser instance has no active Interact discussion
+	 *
+	 * @param Site $site
+	 * @param User $user
+	 * @param Server $server
+	 * @param array $params
+	 * @param $time
+	 * @return JsonAPI
+	 * @throws APIException
+	 */
+	private function active(Site $site, User $user, Server $server, array $params, $time) {
+		if(count($params) < 2) {
+			throw new APIException("Invalid API Usage", APIException::INVALID_API_USAGE);
+		}
+
+		if($server->requestMethod === 'POST') {
+			$instance = $params[1];
+			$interactives = new InterActives($site->db);
+			$post = $server->post;
+			if(isset($post['active'])) {
+				$interactives->set($user, $instance, strip_tags($post['active']), $time);
+			} else {
+				$interactives->reset($instance);
+			}
+		}
+
+		$json = new JsonAPI();
+		return $json;
+	}
+
 
 	/**
 	 * /api/interact/discussion/:discussionid/delete
@@ -120,6 +162,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 		$interactId = $discussion->interactId;
 
 		$cmd = $params[2];
+		$edit = false;
 
 		if ($cmd === 'delete') {
 			if(!$user->atLeast(Member::STAFF)) {
@@ -129,6 +172,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 			}
 
 			$discussions->delete($discussion);
+			$edit = true;
 		} else if($cmd === 'edit') {
 			if(!$user->atLeast(Member::STAFF)) {
 				if($discussion->user->id != $user->id) {
@@ -152,6 +196,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 			$discussion->meta->set('public', Interact::HISTORY, $history);
 
 			$discussions->update($discussion);
+			$edit = true;
 		} else if($cmd === 'endorse') {
 			if(!$user->atLeast(Member::STAFF)) {
 				throw new APIException('Not authorized to edit this discussion item');
@@ -171,11 +216,16 @@ class InteractApi extends \CL\Users\Api\Resource {
 			}
 
 			$discussions->update($discussion);
+			$edit = true;
 		} else {
 			throw new APIException("Invalid API Path", APIException::INVALID_API_PATH);
 		}
 
-		$interaction = $this->getInteraction($site, $user, $interactId);
+		if($edit) {
+			$interacts->updateTime($interactId, $time);
+		}
+
+		$interaction = $this->getInteraction($site, $user, $interactId, $time);
 
 		$json = new JsonAPI();
 		$json->addData('interaction', $interaction->id, $interaction->data($site, $user));
@@ -223,10 +273,6 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		$message = Interact::sanitize($post['message']);
 
-//		/* Indicate the user is no longer editing an interaction */
-//		$interactive = new InterActive($this->course);
-//		$interactive->delete($this->user);
-
 		if(strlen($message) === 0) {
 			throw new APIException("You must provide some discussion!");
 		}
@@ -241,6 +287,17 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		// Interaction time is set to the time of the discussion item
 		$interaction->time = $time;
+
+		if($interaction->type === Interaction::QUESTION) {
+			if($user->atLeast(Member::STAFF)) {
+				// Discussion by staff indicates this query has been answered
+				$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::ANSWERED);
+			} else {
+				// Discussion by students indicates this query is again pending
+				$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::PENDING);
+			}
+		}
+
 		$interacts->update($interaction);
 
 		// Get the discussions for this interaction
@@ -261,7 +318,6 @@ class InteractApi extends \CL\Users\Api\Resource {
 	}
 
 
-
 	/**
 	 * /api/interact/interaction
 	 * /api/interact/interaction/:id
@@ -276,6 +332,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 	 * @param $time
 	 * @return JsonAPI
 	 * @throws APIException
+	 * @throws \CL\Tables\TableException
 	 */
 	private function interaction(Site $site, User $user, Server $server, array $params, $time) {
 		$interacts = new Interacts($site->db);
@@ -284,7 +341,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 		$interaction = null;
 		if(count($params) > 1) {
 			$interactId = +$params[1];
-			$interaction = $this->getInteraction($site, $user, $interactId);
+			$interaction = $this->getInteraction($site, $user, $interactId, $time);
 		}
 
 		if($server->requestMethod === 'POST') {
@@ -342,6 +399,26 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 				$interacts->update($interaction);
 
+			} else if($interaction !== null && count($params) === 3 && $params[2] === 'resolved') {
+				if($interaction->type === Interaction::QUESTION) {
+					$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::RESOLVED);
+					$interaction->time = $time;
+					$interacts->update($interaction);
+				}
+			} else if($interaction !== null && count($params) === 3 && $params[2] === 'close') {
+				$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::CLOSED);
+				$interaction->time = $time;
+				$interacts->update($interaction);
+			} else if($interaction !== null && count($params) === 3 && $params[2] === 'escalate') {
+				if($interaction->type === Interaction::QUESTION) {
+					$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::PENDING);
+					$interaction->meta->set("public", Interact::ESCALATED, true);
+					$interaction->time = $time;
+					$interacts->update($interaction);
+
+					$email = new InteractEmail($site, $user, $server->email);
+					$email->escalated($interaction);
+				}
 			} else if($interaction === null) {
 				// New posting!
 				$post = $server->post;
@@ -360,6 +437,10 @@ class InteractApi extends \CL\Users\Api\Resource {
 				$sendAll = isset($post['sendall']) && $user->atLeast(Member::TA);
 				$interaction->time = $time;
 				$interaction->created = $time;
+
+				if($interaction->type === Interaction::QUESTION) {
+					$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::PENDING);
+				}
 
 				$id = $interacts->add($interaction);
 				if($id === 0) {
@@ -385,33 +466,58 @@ class InteractApi extends \CL\Users\Api\Resource {
 				$email = new InteractEmail($site, $user, $server->email);
 				$email->newInteraction($interaction, $sendAll);
 
-				// TODO: Restore autoanswer system
+				//
+				// Autoanswer System
+				//
+				if($interaction->type === Interaction::QUESTION) {
+					// When we autoanswer, we create the response early
+					// so the answer does not appear immediately. Instead
+					// it appears on the next polling.
+					$json = new JsonAPI();
+					$json->addData('interaction', $interaction->id, $interaction->data($site, $user));
 
-//		if($interaction->get_type() === Interaction::Question) {
-//			//
-//			// Autoanswer system
-//			//
-//			$answerer = new \AutoAnswer\Answerer($this->course, $this->user);
-//			$answer = $answerer->lookup($html, $assignTag, $sectionTag);
-//			if($answer !== null) {
-//				$users = new \Users($this->course);
-//				$answeruser = $users->get_user_by_userid($answerer->answerer);
-//				if($answeruser !== null) {
-//					$discussion = new Discussion($this->course,
-//						$answeruser,
-//						$interaction->get_id(),
-//						$this->time);
-//
-//					$discussion->set_html($answer['text']);
-//
-//					$discussions = new Discussions($this->course);
-//					$discussionId = $discussions->add($discussion, $this->time);
-//					$discussion->set_id($discussionId);
-//
-//					$email->new_discussion($interaction, $discussion);
-//				}
-//			}
-//		}
+					//
+					// Autoanswer system
+					//
+					$answerer = new Answerer($site, $user);
+					$answer = $answerer->lookup($interaction->message,
+						$interaction->assignTag, $interaction->sectionTag);
+					if($answer !== null) {
+						// Find the answering user
+						$users = new Users($site->db);
+						$answerUser = $users->getByUser($answerer->answerer);
+						if($answerUser !== null) {
+							// Find an associated membership for that user
+							$members = new Members($site->db);
+							$answerMember = $members->getBySection($answerUser->id,
+								$user->member->semester, $user->member->sectionId);
+							if($answerMember !== null) {
+								// We found the membership, post the answer
+								$answerUser->member = $answerMember;
+
+								$discussion = new Discussion();
+								$discussion->interactId = $interaction->id;
+								$discussion->user = $answerUser;
+								$discussion->time = $time + self::FUTURE_ANSWER;
+								$discussion->message = $answer['text'];
+
+								$discussions = new Discussions($site->db);
+								$discussions->add($discussion);
+
+								// Interaction time is set to the time of the discussion item
+								$interaction->time = $time + self::FUTURE_ANSWER;
+								$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::ANSWERED);
+
+								$interacts->update($interaction);
+
+								$email = new InteractEmail($site, $user, $server->email);
+								$email->newDiscussion($interaction, $discussion);
+							}
+						}
+					}
+
+					return $json;
+				}
 			}
 
 		}
@@ -429,14 +535,27 @@ class InteractApi extends \CL\Users\Api\Resource {
 	 * @param $interactId
 	 * @return Interaction|null
 	 * @throws APIException
+	 * @throws \CL\Tables\TableException
 	 */
-	private function getInteraction(Site $site, User $user, $interactId) {
+	private function getInteraction(Site $site, User $user, $interactId, $time=null) {
 		$interacts = new Interacts($site->db);
 
 		// Get this interaction
 		$interaction = $interacts->get($interactId);
 		if($interaction === null) {
 			throw new APIException('Interaction does not exist');
+		}
+
+		//
+		// The autoanswer system actually flags Interactions and discussion items
+		// with a future time. If that happens, then ensure the interaction as send
+		// has the current time, not the future time. That way polling will find
+		// the interaction in the future.
+		//
+		if($time !== null) {
+			if($interaction->time > $time) {
+				$interaction->time = $time;
+			}
 		}
 
 		if(!$user->atLeast(Member::STAFF)) {
@@ -447,7 +566,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		// Get the discussions
 		$discussions = new Discussions($site->db);
-		$interaction->discussions = $discussions->getFor($interactId);
+		$interaction->discussions = $discussions->getFor($interactId, $time);
 
 		return $interaction;
 	}
@@ -538,7 +657,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		if($server->requestMethod === 'POST') {
 			$post = $server->post;
-			$this->ensure($post, 'email');
+			$this->ensure($post, ['email', 'escalate']);
 
 			if (count($params) > 1) {
 				$this->isUser($site, Member::TA);
@@ -551,9 +670,11 @@ class InteractApi extends \CL\Users\Api\Resource {
 				}
 
 				$member->member->meta->set(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $post['email']);
+				$member->member->meta->set(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $post['escalate']);
 				$members->writeMetaData($member->member);
 			} else {
 				$user->member->meta->set(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $post['email']);
+				$user->member->meta->set(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $post['escalate']);
 				$members->writeMetaData($user->member);
 			}
 		}
@@ -565,11 +686,15 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 			foreach($staff as $staffUser) {
 				$ret[] = ['user'=>$staffUser->data(),
-					'email'=>$staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $staffUser->atLeast(Member::TA))];
+					'email'=>$staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $staffUser->atLeast(Member::TA)),
+  				    'escalate'=>$staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $staffUser->atLeast(Member::TA))
+				];
 			}
 		} else {
 			$ret[] = ['user'=>$user->data(),
-				'email'=>$user->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $user->atLeast(Member::TA))];
+				'email'=>$user->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $user->atLeast(Member::TA)),
+				'escalate'=>$user->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $user->atLeast(Member::TA))
+			];
 		}
 
 		$json = new JsonAPI();

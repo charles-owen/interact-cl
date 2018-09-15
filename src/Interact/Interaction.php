@@ -24,15 +24,26 @@ use CL\Site\Site;
  * @property boolean pin
  * @property boolean private
  * @property string type
+ * @property int id
+ * @property int time
+ * @property int created
  * @endcond
  */
 class Interaction extends InteractContent {
 
-	/// User question expecting an answer
+	/// type: User question expecting an answer
     const QUESTION = 'Q';
 
-    /// Announcement
+    /// type: Announcement
     const ANNOUNCEMENT = 'A';
+
+    //
+	// The interaction states
+	//
+    const PENDING = 'P';    ///< Requiring an answer
+    const ANSWERED = 'A';   ///< Has been answered
+    const RESOLVED = 'R';   ///< Problem has been resolved
+    const CLOSED = 'C';     ///< Interaction is closed for further discussion
 
 	/**
 	 * Interaction constructor.
@@ -44,13 +55,19 @@ class Interaction extends InteractContent {
 
 		if($row !== null) {
 			$this->created = strtotime($row["{$prefix}created"]);
+			$this->time = strtotime($row["{$prefix}time"]);
 			$this->assignTag = $row["{$prefix}assigntag"];
 			$this->sectionTag = $row["{$prefix}sectiontag"];
 			$this->type = $row["{$prefix}type"];
 			$this->pin = +$row["{$prefix}pin"] == 1;
 			$this->private = +$row["{$prefix}private"] == 1;
 			$this->summary = $row["{$prefix}summary"];
-			$this->discussionCnt = $row["{$prefix}discussions"];
+			if(!empty($row["{$prefix}discussions"])) {
+				$this->discussionCnt = $row["{$prefix}discussions"];
+			} else {
+				$this->discussionCnt = null;
+			}
+
 		}
     }
 
@@ -236,13 +253,14 @@ class Interaction extends InteractContent {
 	 * @return array results
 	 */
 	public function summaryData(Site $site, User $user) {
-		return [
-			'id'=>$this->id,
+		$data = parent::data($site, $user);
+
+		$data1 = [
+			'created'=>$this->created,
 			'assign'=>$this->assignTag,
 			'section'=>$this->sectionTag,
 			'pin'=>$this->pin,
 			'private'=>$this->private,
-			'time'=>$this->time,
 			'summarized'=>$this->summarize(),
 			'summary'=>$this->summary,
 			'discussionsCnt'=>$this->discussionCnt,
@@ -250,6 +268,16 @@ class Interaction extends InteractContent {
 			'closed'=>false,
 			'type'=>$this->type
 		];
+
+		if($this->type === self::QUESTION) {
+			$data1['state'] = $this->meta->get('public', Interact::INTERACTION_STATE, self::RESOLVED);
+			$escalated = $this->meta->get('public', Interact::ESCALATED, null);
+			if($escalated !== null) {
+				$data1['escalated'] = $escalated;
+			}
+		}
+
+		return array_merge($data, $data1);
 	}
 
 	/**
@@ -259,7 +287,7 @@ class Interaction extends InteractContent {
 	 * @return array results
 	 */
 	public function data(Site $site, User $user) {
-		$data = parent::data($site, $user);
+		$data = $this->summaryData($site, $user);
 
 		$discussions = [];
 		foreach($this->discussions as $discussion) {
@@ -267,22 +295,10 @@ class Interaction extends InteractContent {
 		}
 
 		$data1 = [
-			'assign'=>$this->assignTag,
-			'section'=>$this->sectionTag,
-			'pin'=>$this->pin,
-			'private'=>$this->private,
-			'created'=>$this->created,
-			'summarized'=>$this->summarize(),
-			'summary'=>$this->summary,
-			'discussionsCnt'=>$this->discussionCnt,
-			'attribution'=>$this->attribution($site, $user),
-			'closed'=>false,
-			'type'=>$this->type,
 			'message'=>$this->message,
-			'discussions'=>$discussions
+			'discussions'=>$discussions,
+			'history'=>$this->historyData($user)
 		];
-
-		$data1['history'] = $this->historyData($user);
 
 		// Some additional data goes to staff only
 		if($user->atLeast(Member::STAFF)) {
@@ -295,204 +311,6 @@ class Interaction extends InteractContent {
 
 		return array_merge($data, $data1);
 	}
-
-//	/**
-//	 * Set the interaction summary text
-//	 * @param $summary New text
-//	 */
-//    public function set_summary($summary) {
-//        $this->summary = $summary;
-//    }
-//
-//	/**
-//	 * Get the interaction summary text
-//	 * @return string Interaction summary
-//	 */
-//    public function get_summary() {
-//        return $this->summary;
-//    }
-//
-//	/**
-//	 * Set the assignment and section tags
-//	 * @param $tag New assignment tag
-//	 */
-//	public function set_assign_section($assignTag, $sectionTag) {
-//		$this->assignTag = $assignTag;
-//		$this->sectionTag = $sectionTag;
-//	}
-//
-//	/**
-//	 * Get the assignment/category tag
-//	 * @return string Assignment tag
-//	 */
-//    public function get_assign_tag() {
-//        return $this->assignTag;
-//    }
-//
-//	/**
-//	 * Get the section tag or null if none
-//	 * @return string|null Section tag
-//	 */
-//    public function get_section_tag() {
-//        return $this->sectionTag;
-//    }
-//
-//	/**
-//	 * Get the interaction type (Annoucement or Question)
-//	 * @return Type constant
-//	 */
-//    public function get_type() {
-//        return $this->type;
-//    }
-//
-//	/**
-//	 * Is this interaction pinned?
-//	 * @return bool True if pinned
-//	 */
-//    public function is_pin() {
-//        return $this->pin;
-//    }
-//
-//	/**
-//	 * Is this interaction private
-//	 * @return bool True if private
-//	 */
-//    public function is_private() {
-//        return $this->private;
-//    }
-//
-//	/**
-//	 * Set the interaction ID
-//	 * @param int $id New interaction ID
-//	 */
-//    public function set_id($id) {
-//        $this->id = $id;
-//    }
-//
-//	/**
-//	 * Get the interaction ID
-//	 * @return int Interaction ID
-//	 */
-//    public function get_id() {
-//        return $this->id;
-//    }
-
-
-//	/**
-//	 * Set the number of discussions about this interaction
-//	 * @param $r Number of discussions
-//	 */
-//    public function set_discussions($r) {
-//        $this->discussions = $r;
-//    }
-//
-//	/**
-//	 * Get the number of discussions about this interaction
-//	 * @return int Number of discussions
-//	 */
-//    public function get_discussions() {
-//        return $this->discussions;
-//    }
-
-
-
-//	protected function write_xml_root(\XMLWriter $xml) {
-//		parent::write_xml_root($xml);
-//
-//		if ($this->closed) {
-//			$xml->writeAttribute('closed', 'yes');
-//		}
-//	}
-//
-//	protected function xml_root($xml) {
-//		parent::xml_root($xml);
-//
-//		$c = $xml->getAttribute('closed');
-//		$this->closed = $c === 'yes';
-//	}
-//
-//	/**
-//	 * Is discussion close for this iteraction.
-//	 * @return bool True if discussion is closed
-//	 */
-//	public function is_closed() {
-//		return $this->closed;
-//	}
-//
-//	public function set_closed($closed = true) {
-//		$this->closed = $closed;
-//	}
-//
-//    /**
-//     * Construct an attribution line for this interaction
-//     * @param \User $user A user this is displaying for
-//     * @param $email True if attribute is for email
-//     * @return string Attribution
-//     */
-//    public function attribution(\User $user, $email=false) {
-//        $assignTag = $this->assignTag;
-//        if($assignTag === null || $assignTag === '') {
-//            return '';
-//        }
-//
-//        $assignment = $user->get_assignment($assignTag);
-//        if($assignment !== null) {
-//            $assignment->load();
-//            $attr = $assignment->get_shortname();
-//
-//            $sectionTag = $this->sectionTag;
-//
-//            if($sectionTag !== null && $sectionTag !== '') {
-//                if($assignment instanceof \Step\Step) {
-//                    $section = $assignment->get_section($sectionTag);
-//                    if($section !== null) {
-//                        if(!$email) {
-//                            $url = $this->course->get_libroot() . '/step/stepsection.php?step=' .
-//                                $assignment->get_tag() . '&section=' . $sectionTag;
-//
-//                            $attr = '<a href="' . $url . '" target="INTERACT_STEP">' .
-//                                $attr . "/" . $assignment->get_section($sectionTag)->get_name() .
-//                                '</a>';
-//                        } else {
-//                            $attr = $attr . "/" . $assignment->get_section($sectionTag)->get_name();
-//                        }
-//                    }
-//                }
-//            }
-//
-//            return $attr;
-//        }
-//
-//        switch($assignTag) {
-//            case 'general':
-//                return "General Course Information";
-//
-//            case 'test':
-//                return "Test Messages";
-//        }
-//
-//        return $assignTag;
-//    }
-//
-//    /**
-//     * Convert the Interaction an array that we can then convert to JSON
-//     * @param \User $user User we are displaying this interaction for
-//     * @return array
-//     */
-//    public function to_array(\User $user) {
-//        return [
-//            'id'=>$this->id,
-//            'time'=>$this->time,
-//            'type'=>$this->type,
-//            'pin'=>$this->pin,
-//            'private'=>$this->private,
-//            'summary'=>$this->summary,
-//            'discussions'=>$this->discussions,
-//            'closed'=>$this->closed,
-//            'attribution'=>$this->attribution($user),
-//            'summarized'=> $this->summarize()
-//        ];
-//    }
 
     private $assignTag = null;
     private $sectionTag = null;

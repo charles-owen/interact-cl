@@ -17,5 +17,7 @@ export const InteractionSummary = function(data) {
     this.discussionsCnt = data.discussionsCnt;
     this.attribution = data.attribution;
     this.closed = data.closed;
+    this.state = data.state;
+    this.escalated = data.escalated;
 }
 

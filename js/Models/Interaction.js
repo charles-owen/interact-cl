@@ -29,6 +29,8 @@ export const Interaction = function(data) {
 	this.history = data.history;
 	this.memberid = data.memberid;
 	this.following = data.following;
+	this.state = data.state;
+	this.escalated = data.escalated;
 
     this.discussions = [];
     if(data.discussions !== undefined) {
@@ -53,3 +55,11 @@ Interaction.NOTFOLLOWING = 'N';
 /** User will never follow */
 Interaction.NEVERFOLLOW = 'X';
 
+//
+// Interaction states
+//
+
+Interaction.PENDING = 'P';    ///< Requiring an answer
+Interaction.ANSWERED = 'A';   ///< Has been answered
+Interaction.RESOLVED = 'R';   ///< Problem has been resolved
+Interaction.CLOSED = 'C';     ///< Interaction is closed for further discussion

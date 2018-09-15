@@ -79,6 +79,11 @@ class InteractPlugin extends \CL\Site\Plugin implements \CL\Site\IExtension {
 				}
 			});
 
+			$router->addRoute(['help', 'interact'], function(Site $site, Server $server, array $params, array $properties, $time) {
+				$view = new Help\Help($site);
+				return $view->whole();
+			});
+
 		} else if($object instanceof \CL\Course\CourseHomeView) {
 			$object->extend('interact_button', function($view, $args) {
 				if(!$view->user->atLeast(Member::STUDENT)) {

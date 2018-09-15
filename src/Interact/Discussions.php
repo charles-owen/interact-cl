@@ -101,13 +101,18 @@ SQL;
 	/**
 	 * Get the discussion items for a given interaction
 	 * @param int $interactId The Interaction ID.
+	 * @param int $before Only discussion items before this time are returned
 	 * @return array
 	 */
-    public function getFor($interactId) {
+    public function getFor($interactId, $before=null) {
 	    $where = new \CL\Tables\TableWhere($this);
 
 	    $where->append('discussion.interactid=?', $interactId, \PDO::PARAM_INT);
 	    $where->append('discussion.deleted=?', 0, \PDO::PARAM_INT);
+
+	    if($before !== null) {
+		    $where->append('discussion.time<=?', $this->timeStr($before));
+	    }
 
 	    $fields = <<<FIELDS
 discussion.id as id, discussion.interactid as interactid, discussion.time as time, discussion.message as message, discussion.metadata as metadata

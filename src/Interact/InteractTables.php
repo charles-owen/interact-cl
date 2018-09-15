@@ -23,5 +23,6 @@ class InteractTables extends \CL\Tables\TableMaker {
 		$this->add(new Interacts($config));
 		$this->add(new InterFollows($config));
 		$this->add(new Discussions($config));
+		$this->add(new InterActives($config));
 	}
 }

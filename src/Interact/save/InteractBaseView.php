@@ -559,7 +559,7 @@ HTML;
 		$html .= <<<HTML
 <div class="interact-content">
 <h3 class="interaction-heading">$menu<span>$date<br>
-<button class="follow">$followImg</button> @$id</span>{$pin}{$announce}$summary</h3>
+<button class="cl-follow">$followImg</button> @$id</span>{$pin}{$announce}$summary</h3>
 <p class="link">$quest $name / $attr</p>
 <div class="content"></div>
 HTML;

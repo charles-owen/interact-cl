@@ -1,5 +1,5 @@
 <template>
-  <div class="cl-interact">
+  <div :class="cls">
     <h2 class="cl-banner"><button class="cl-start" @click.prevent="click"><img :src="root + '/vendor/cl/interact/img/logo16.png'" width="16" height="16"> Interact!</button>
       <span class="cl-info">{{info}}</span>
       <span class="cl-message"></span></h2>
@@ -7,15 +7,23 @@
 </template>
 
 <script>
+	import {Member} from 'course-cl/js/Members/Member';
+
   export default {
   	props: ['data'],
       data: function() {
           return {
               root: Site.root,
+   	          cls: 'cl-interact',
               info: ''
           }
       },
       mounted() {
+	      const user = this.$store.state.user.user;
+	      if(user.atLeast(Member.STAFF)) {
+		      this.cls += ' cl-staff';
+	      }
+
   		  if(this.data.categories.length === 1) {
           let params = {
             assign: this.data.categories[0].tag,

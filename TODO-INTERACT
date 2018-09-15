@@ -1,10 +1,9 @@
-TODO: Interact: Polling
-TODO: Interact: Indicate unanswered questions
 TODO: Interact: Search
-TODO: Interact: Autoanswer
+TODO: Adds an history entry indicating who closed an Interaction
+
+FIXME: Deletions are not detected by polling
 
 TODO: Interact Images
-TODO: Close discussion
 TODO: Display student ID for staff
 FUTURE: Ability to see and edit followers
 FUTURE: Ability to set section
@@ -12,3 +11,5 @@ FUTURE: Ability to view deleted interactions and discussions
 FUTURE: Filter out or fix Unicode character in email
 TEST: Editing an interaction that has been deleted
 TEST: Okay if you paste in < and >?
+
+FUTURE: Way to automatically tell if a student has submitted

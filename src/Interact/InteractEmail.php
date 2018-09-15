@@ -109,6 +109,67 @@ MSG;
 		$this->notifyFollowers($interaction, $msg, $staff, false);
 	}
 
+
+	/**
+	 * Handle an escalation of an interaction.
+	 *
+	 * This is also called when all users are forced to follow an existing interaction
+	 * @param Interaction $interaction The new Interaction that has been added
+	 * @param bool $sendAll If true, send out to all users
+	 */
+	public function escalated(Interaction $interaction) {
+		$courseName = $this->site->course->name;
+		$id = $interaction->id;
+		$message = $interaction->message;
+
+		$attribution = $interaction->attribution($this->site, $this->user, true);
+		$url = $this->site->server . $this->site->root . '/cl/interact/' . $id;
+		$announce = '<strong>Interaction has been Escalated</strong>';
+		$userName = $this->user->displayName;
+
+		$course = $this->site->course;
+		$courseName = $course->name;
+		$summary = $interaction->summary;
+
+		$interactDir = __DIR__ . '/../..';
+		$style = file_get_contents($interactDir . '/interact_content.css');
+
+		$msg = <<<MSG
+		<style>$style</style>
+<div class="interact-content">
+<p>$announce @$id in the $courseName <a href="$url" target="INTERACT">Interact! system</a>.</p>
+<p>$summary<br />
+$attribution</p>
+$message
+<p>@$id escalated by $userName</p>
+</div>
+MSG;
+
+		set_time_limit(120);
+
+		// Determine who to send to
+		$recipients = [];
+
+		$members = new Members($this->site->db);
+		$staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true]);
+		foreach($staff as $staffUser) {
+			$receiving = $staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $staffUser->atLeast(Member::TA));
+			if($receiving) {
+				$recipients[] = $staffUser;
+			}
+		}
+
+		foreach($recipients as $recipient) {
+			// Don't send to the escalator...
+			if($recipient->member->id === $this->user->member->id) {
+				continue;
+			}
+
+			$this->email->send($this->site, $recipient->email, $recipient->displayName,
+				"$courseName Interact Escalation!: " . $summary, $msg);
+		}
+	}
+
 	private function notifyFollowers(Interaction $interaction, $message, $staffMessage, $sendAll=false) {
 		$interFollows = new InterFollows($this->site->db);
 		$followers = $interFollows->getFollowers($interaction->id);
@@ -132,7 +193,6 @@ HTML;
 
 		if($sendAll) {
 			$members = new Members($this->site->db);
-			$values = '';
 			$query = $members->query(['semester'=>$this->user->member->semester,
 				'section'=>$this->user->member->sectionId]);
 			foreach($query as $user) {

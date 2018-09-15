@@ -30,7 +30,7 @@ class Interacts extends \CL\Tables\Table {
 	}
 
 	/**
-	 * Create an SQL create table command for the users table
+	 * Create an SQL create table command for the interact table
 	 * @return string SQL
 	 */
 	public function createSQL() {
@@ -262,9 +262,10 @@ SQL;
 	/**
 	 * Get a single Interaction
 	 * @param int $id ID for the interaction
+	 * @param bool $discussionCnt True if we want to load the discussion count
 	 * @return Interaction|null Interaction found or null if does not exist
 	 */
-    public function get($id) {
+    public function get($id, $discussionCnt = true) {
 	    $where = new \CL\Tables\TableWhere($this);
 	    $discussions = new Discussions($this->config);
 	    $discussionsTable = $discussions->tablename;
@@ -275,8 +276,19 @@ SQL;
 interact.id as id, assigntag, sectiontag, 
 interact.created as created, interact.time as time, interact.type as type,
 pin, private, interact.summary as summary, interact.message as message,
-interact.metadata as metadata, interact.deleted as deleted, count(discussion.id) as discussions
+interact.metadata as metadata, interact.deleted as deleted
 FIELDS;
+
+	    if($discussionCnt) {
+	    	$fields .= ', count(discussion.id) as discussions';
+	    	$discussionsJoin = <<<SQL
+left join $discussionsTable discussion
+on interact.id=discussion.interactid
+SQL;
+
+	    } else {
+	    	$discussionsJoin = '';
+	    }
 
 	    $members = new Members($this->config);
 	    $sql = $members->memberUserJoinSQL($fields, false, 'user_', 'member_');
@@ -284,18 +296,20 @@ FIELDS;
 	    $sql .= <<<SQL
 join $this->tablename interact
 on member.id=interact.memberid
-left join $discussionsTable discussion
-on interact.id=discussion.interactid
+$discussionsJoin
 $where->where
 group by interact.id
 order by pin desc, time desc 
 SQL;
 
-
-	    // echo $where->sub_sql($sql);
-	    $result = $where->execute($sql);
-	    $row = $result->fetch(\PDO::FETCH_ASSOC);
-	    if($row === false || $row === null) {
+	    try {
+		    // echo $where->sub_sql($sql);
+		    $result = $where->execute($sql);
+		    $row = $result->fetch(\PDO::FETCH_ASSOC);
+		    if($row === false || $row === null) {
+			    return null;
+		    }
+	    } catch(\CL\Tables\TableException $exception) {
 	    	return null;
 	    }
 
@@ -333,6 +347,30 @@ SQL;
 
         // echo $this->sub_sql($sql, $exec);
         $stmt->execute($exec);
+    }
+
+	/**
+	 * Just update the Interaction time.
+	 * @param int $interactId Id to update
+	 * @param int $time Time to set
+	 */
+    public function updateTime($interactId, $time) {
+	    $pdo = $this->pdo();
+
+	    $sql = <<<SQL
+update $this->tablename
+set time=?
+where id=?
+SQL;
+
+	    $stmt = $pdo->prepare($sql);
+	    $exec = [
+		    $this->timeStr($time),
+		    $interactId
+	    ];
+
+	    // echo $this->sub_sql($sql, $exec);
+	    $stmt->execute($exec);
     }
 
 	/**

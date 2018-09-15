@@ -1,8 +1,10 @@
 <template>
-  <div class="cl-interact">
+  <div :class="cls">
     <form class="search">
       <h2 class="cl-banner"><button @click.prevent="ask"><img :src="root + '/vendor/cl/interact/img/logo16.png'" width="16" height="16"> ¿Ask a Question?</button> Interact!
-       <!-- <span class="cl-search"><input type="text" placeholder="Search..." name="search"><button type="submit">Search</button></span> -->
+       <span class="cl-search"><!-- <input type="text" placeholder="Search..." name="search"><button type="submit">Search</button> -->
+        <a :href="root + '/cl/help/interact'" target="_blank"><img :src="root + '/vendor/cl/interact/img/help.png'"></a>
+       </span>
       </h2>
     </form>
     <div class="cl-interact-body">
@@ -25,6 +27,7 @@
   import NewInteractionVue from './NewInteraction.vue';
   import WelcomeVue from './Welcome.vue';
   import {Summaries} from '../Models/Summaries';
+  import {Member} from 'course-cl/js/Members/Member';
 
   /**
    * Interact main window
@@ -35,6 +38,7 @@
       data: function() {
           return {
               root: Site.root,
+	            cls: 'cl-interact',
               summaries: null,
               selected: 0,        // Currently selected interaction ID, 0 if none
               composing: false   // True if we are entering a new interaction
@@ -56,6 +60,11 @@
       	this.$interact.summaries = this.summaries;
       },
       mounted() {
+	      const user = this.$store.state.user.user;
+	      if(user.atLeast(Member.STAFF)) {
+	      	this.cls += ' cl-staff';
+        }
+
         this.summaries.fetch(() => {
         	if(this.id !== undefined) {
         		this.select(this.id);

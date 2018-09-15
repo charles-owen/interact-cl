@@ -3,6 +3,7 @@
  */
 
 div.cl-discussions {
+  border-bottom: 1px solid black;
 
   >h3 {
     border: 0;
@@ -13,5 +14,12 @@ div.cl-discussions {
     color: white;
     font-weight: normal;
     font-size: 13px;
+  }
+
+  >p {
+    text-align: center;
+    font-size: 0.85em;
+    font-style: italic;
+    color: $discussing;
   }
 }

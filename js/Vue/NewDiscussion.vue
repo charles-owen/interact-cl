@@ -1,7 +1,7 @@
 <template>
   <div class="cl-discuss-form">
     <mask-vue :mask="mask">Communicating with server...</mask-vue>
-    <h4 class="discuss-heading">Contribute to the discussion</h4>
+    <h4>Contribute to the discussion</h4>
     <form method="post" @submit.prevent="submit">
       <component ref="editor" :is="editor" v-model="text" :discussion="true" :canned="data.interact.canned"></component>
       <p><input type="submit" value="Post"></p>
@@ -20,13 +20,33 @@
           return {
               text: '',
               mask: false,
-              editor: EditorVue
+              editor: EditorVue,
+              active: false
+          }
+      },
+      watch: {
+      	  interaction() {
+      	  	  this.text = '';
+	            this.$refs.editor.reset();
+      	  	  if(this.active) {
+      	  	  	this.active = false;
+		            this.$interact.setActive(null);
+              }
+          },
+      	  text() {
+      	  	if(!this.active && this.text.length > 0) {
+      	  		this.active = true;
+      	  		this.$interact.setActive(this.interaction.id);
+            }
           }
       },
       components: {
           maskVue: MaskVue
       },
       mounted() {
+      },
+      beforeDestroy() {
+	      this.$interact.setActive(null);
       },
       methods: {
           submit() {
@@ -36,7 +56,7 @@
 
               this.mask = true;
 
-              Site.api.post('/api/interact/discuss/' + this.interaction.id, params)
+              this.$site.api.post('/api/interact/discuss/' + this.interaction.id, params)
                   .then((response) => {
                       this.mask = false;
                       if (!response.hasError()) {
@@ -45,13 +65,13 @@
                           this.text = '';
                           this.$refs.editor.reset();
                       } else {
-                          Site.toast(this, response);
+	                      this.$site.toast(this, response);
                       }
 
                   })
                   .catch((error) => {
                       this.mask = false;
-                      Site.toast(this, error);
+	                    this.$site.toast(this, error);
                   });
 
           }

@@ -13,7 +13,8 @@
         props: ['prompt', 'value', 'discussion', 'canned'],
         data: function() {
             return {
-                active: false
+                active: false,
+                editor: null
             }
         },
         mounted() {
@@ -60,7 +61,11 @@
             },
             reset() {
               this.active = false;
-              this.editor.destroy();
+              if(this.editor !== null) {
+	              this.editor.destroy();
+	              this.editor = null;
+              }
+
 	            this.$refs['textarea'].value = '';
             }
         }

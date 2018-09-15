@@ -4,28 +4,54 @@
  * @constructor
  */
 export const Interact = function(site) {
+	// Interact ID we are actively editing the discussion for
+	let active = null;
 
-
+	/**
+	 * Start polling for Interact
+	 * Installs pre and post polling handlers
+	 */
 	this.startPolling = function() {
-		console.log('startPolling');
-
 		site.polling.addClient('interact', (params) => {
-			params.interact = {};
+			params.interact = {
+				instance: this.instance
+			};
+
+			if(active !== null) {
+				params.interact.active = active;
+			}
 
 			if(this.summaries !== null) {
 				this.summaries.prePolling(params.interact);
 			}
 
-			//console.log(params);
+			if(this.presenter !== null) {
+				this.presenter.prePolling(params.interact);
+			}
 		}, (response) => {
 			if(this.summaries !== null) {
 				this.summaries.postPolling(response);
+			}
+
+			if(this.presenter !== null) {
+				this.presenter.postPolling(response);
 			}
 		});
 	}
 
 	this.endPolling = function() {
-		console.log('endPolling');
+		site.polling.removeClient('interact');
+	}
+
+	this.setActive = function(_active) {
+		if(active !== _active) {
+			site.api.post('/api/interact/active/' + this.instance, {active: _active})
+			    .then((response) => {
+			    })
+			    .catch((error) => {
+			    });
+		}
+		active = _active;
 	}
 
 	let random = (len) => {
@@ -50,4 +76,10 @@ export const Interact = function(site) {
 	 * @type {Summaries}
 	 */
 	this.summaries = null;
+
+	/**
+	 * Attached presenter vue
+	 * @type {InteractionPresenterVue}
+	 */
+	this.presenter = null;
 }

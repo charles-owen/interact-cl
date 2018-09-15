@@ -1,14 +1,24 @@
 <template>
   <div class="cl-interact-console">
-    <div class="group">
-    <p v-if="me !== null"><label><input type="checkbox" v-model="me.email" @change="change(me)"> Receive email on new Interacts!</label></p>
+    <div class="cl-group">
+    <p v-if="me !== null"><label>
+      <input type="checkbox" v-model="me.email" @change="change(me, 'email')"> Receive email on new Interacts!</label></p>
+      <p v-if="me !== null"><label>
+        <input type="checkbox" v-model="me.escalate" @change="change(me, 'escalate')"> Receive email on escalations.</label></p>
     </div>
     <h3 v-if="tas.length > 0 || others.length > 0">Other Staff</h3>
-    <div class="group">
-    <p v-for="user in tas" :key="user.user.id"><label><input type="checkbox" v-model="user.email" @change="change(user)"> {{user.user.displayName()}}</label></p>
+    <div class="cl-group">
+    <p v-for="user in tas" :key="user.user.id"><label>
+      <input type="checkbox" v-model="user.email" @change="change(user, 'email')">
+      <input type="checkbox" v-model="user.escalate" @change="change(user, 'escalate')">
+      {{user.user.displayName()}}
+    </label></p>
     </div>
-    <div class="group">
-    <p v-for="user in others" :key="user.user.id"><label><input type="checkbox" v-model="user.email" @change="change(user)"> {{user.user.displayName()}}</label></p>
+    <div class="cl-group">
+    <p v-for="user in others" :key="user.user.id"><label>
+      <input type="checkbox" v-model="user.email" @change="change(user, 'email')">
+      <input type="checkbox" v-model="user.escalate" @change="change(user, 'escalate')">
+      {{user.user.displayName()}}</label></p>
     </div>
 
   </div>
@@ -41,9 +51,10 @@
               });
       },
       methods: {
-          change(user) {
+          change(user, type) {
 		          if(user.user.member.id === this.user.member.id) {
-			          Site.api.post('/api/interact/email', {email: user.email})
+			          Site.api.post('/api/interact/email',
+                    {email: user.email, escalate: user.escalate})
 				          .then((response) => {
 					          if (!response.hasError()) {
 						          this.newResponse(response);
@@ -56,7 +67,8 @@
 					          Site.toast(this, error);
 				          });
 		          } else {
-			          Site.api.post('/api/interact/email/' + user.user.member.id, {email: user.email})
+			          Site.api.post('/api/interact/email/' + user.user.member.id,
+                    {email: user.email, escalate: user.escalate})
 				          .then((response) => {
 					          if (!response.hasError()) {
 						          this.newResponse(response);

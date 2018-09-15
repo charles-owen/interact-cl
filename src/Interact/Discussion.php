@@ -17,6 +17,7 @@ use CL\Users\User;
  *
  * @cond
  * @property int interactId
+ * @property int time
  * @endcond
  */
 class Discussion extends InteractContent {

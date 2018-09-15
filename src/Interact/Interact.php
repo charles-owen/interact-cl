@@ -18,11 +18,20 @@ class Interact {
     /// MetaData key for determining if staff member receives Interact email
     const RECEIVE_MAIL = "email";
 
+	/// MetaData key for determining if staff member receives Interact escalations
+	const RECEIVE_ESCALATION = 'escalate';
+
     /// MetaData key for interaction or discussion history
 	const HISTORY = 'history';
 
 	/// MetaData category for discussion endorsements
 	const ENDORSEMENTS = 'endorse';
+
+	/// MetaData key for Interaction state
+	const INTERACTION_STATE = 'state';
+
+	/// MetaData key for Interaction escalation role
+	const ESCALATED = 'escalated';
 
     /**
      * Add a canned text item to Interact

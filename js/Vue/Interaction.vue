@@ -2,19 +2,22 @@
   <div class="cl-interaction">
     <mask-vue :mask="mask">Communicating with server...</mask-vue>
     <div v-if="!editing">
-      <cl-menu v-if="staff || self">
+      <cl-menu v-if="(staff || self) && !closed">
         <a><img :src="root + '/vendor/cl/site/img/menubars.png'"></a>
         <ul>
-          <li><a @click.prevent="editMe"><img :src="root + '/vendor/cl/site/img/pen16.png'"> Edit</a></li>
-          <li><a @click.prevent="deleteMe"><img :src="root + '/vendor/cl/site/img/x.png'"> Delete</a></li>
+          <li @click.stop="editMe"><a @click.prevent.stop="editMe"><img :src="root + '/vendor/cl/site/img/pen16.png'"> Edit</a></li>
+          <li @click.stop="deleteMe"><a @click.prevent.stop="deleteMe"><img :src="root + '/vendor/cl/site/img/x.png'"> Delete</a></li>
           <li v-if="data.gradingLink !== undefined && interaction.assign !== 'general'"><a :href="root + data.gradingLink + '/' + interaction.assign + '/' + interaction.memberid"
                  target="INTERACT_GRADING"><img :src="root + '/vendor/cl/interact/img/grading.png'"> Grading page</a></li>
+          <li v-if="resolvable" @click.stop="resolved"><a  @click.prevent.stop="resolved"><img :src="root + '/vendor/cl/site/img/check16.png'"> Resolved</a></li>
+          <li v-if="escalatable" @click.stop="escalate"><a  @click.prevent.stop="escalate"><img :src="root + '/vendor/cl/interact/img/up.png'"> Escalate</a></li>
+          <li v-if="staff" @click.stop="closeMe"><a  @click.prevent.stop="closeMe"><img :src="root + '/vendor/cl/interact/img/close.png'"> Close Interaction</a></li>
           <!-- <li><a><img :src="root + '/vendor/cl/interact/img/close.png'"> Close discussion</a></li> -->
         </ul>
       </cl-menu>
         <h3 class="cl-interaction-heading">
           <span>{{date}}<br>
-  <button v-if="interaction.following !== NEVERFOLLOW" class="follow" @click.prevent="follow()">
+  <button v-if="interaction.following !== NEVERFOLLOW" class="cl-follow" @click.prevent="follow()">
     <img v-if="interaction.following === FOLLOWING" :src="root + '/vendor/cl/interact/img/following.png'" alt="Following Interaction" height="16" width="92">
     <img v-if="interaction.following === NOTFOLLOWING" :src="root + '/vendor/cl/interact/img/follow.png'" alt="Follow Interaction" height="16" width="92">
   </button> @{{interaction.id}}</span>
@@ -57,11 +60,20 @@
 	          editing: false,
 	          mask: false,
             displayMessage: '',
+            closed: false,
 
 	          FOLLOWING: Interaction.FOLLOWING,
 	          NOTFOLLOWING: Interaction.NOTFOLLOWING,
 	          NEVERFOLLOW: Interaction.NEVERFOLLOW
           }
+      },
+      computed: {
+      	resolvable() {
+      		return this.interaction.state === Interaction.PENDING || this.interaction.state === Interaction.ANSWERED;
+        },
+        escalatable() {
+      		return this.staff && this.interaction.type === Interaction.QUESTION && this.interaction.escalated === undefined;
+        }
       },
       watch: {
       	interaction() {
@@ -81,6 +93,7 @@
       methods: {
       	take() {
 	        this.self = this.interaction.by === 'Me';
+	        this.closed = this.interaction.state === Interaction.CLOSED;
 
 	        if(this.interaction.private) {
 		        if(this.interaction.type === Interaction.ANNOUNCEMENT) {
@@ -132,11 +145,62 @@
 		        });
 
         },
+        closeMe() {
+	        new Dialog.MessageBox('Are you sure?', 'Are you sure you want to close this interaction?',
+		        Dialog.MessageBox.OKCANCEL, () => {
+			        Site.api.post('/api/interact/interaction/' + this.interaction.id + '/close', {})
+				        .then((response) => {
+					        if (!response.hasError()) {
+                    this.editing = false;
+                    const interaction = new Interaction(response.getData('interaction').attributes);
+                    this.$emit('reloaded', interaction);
+					        } else {
+						        Site.toast(this, response);
+					        }
+
+				        })
+				        .catch((error) => {
+					        Site.toast(this, error);
+				        });
+		        });
+        },
         editMe() {
       		this.editing = true;
         },
         cancel() {
       		this.editing = false;
+        },
+        resolved() {
+	        this.$site.api.post('/api/interact/interaction/' + this.interaction.id + '/resolved', {})
+		        .then((response) => {
+			        if (!response.hasError()) {
+		            this.editing = false;
+		            const interaction = new Interaction(response.getData('interaction').attributes);
+		            this.$emit('reloaded', interaction);
+			        } else {
+		             this.$site.toast(this, response);
+			        }
+
+		        })
+		        .catch((error) => {
+		            this.$site.toast(this, error);
+		        });
+        },
+        escalate() {
+	        this.$site.api.post('/api/interact/interaction/' + this.interaction.id + '/escalate', {})
+		        .then((response) => {
+			        if (!response.hasError()) {
+				        this.editing = false;
+				        const interaction = new Interaction(response.getData('interaction').attributes);
+				        this.$emit('reloaded', interaction);
+			        } else {
+				        this.$site.toast(this, response);
+			        }
+
+		        })
+		        .catch((error) => {
+			        this.$site.toast(this, error);
+		        });
         },
         submit(data) {
 	        this.mask = true;
