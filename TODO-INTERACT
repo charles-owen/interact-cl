@@ -3,6 +3,7 @@ TODO: Adds an history entry indicating who closed an Interaction
 
 FIXME: Deletions are not detected by polling
 
+TODO: Works better when pasting in code
 TODO: Interact Images
 TODO: Display student ID for staff
 FUTURE: Ability to see and edit followers
