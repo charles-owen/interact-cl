@@ -4,6 +4,7 @@
  * Interact class for constants, common functions, and any custom configuration
  */
 
+/// Classes in the Interact! subsystem
 namespace CL\Interact;
 
 use CL\Users\User;

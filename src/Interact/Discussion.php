@@ -7,18 +7,12 @@
 namespace CL\Interact;
 
 use CL\Site\Site;
-use CL\Course\Member;
 use CL\Users\User;
 
 /**
  * Class that represents a single discussion item in an interaction
  *
  * This class represents records in the discussion table
- *
- * @cond
- * @property int interactId
- * @property int time
- * @endcond
  */
 class Discussion extends InteractContent {
 

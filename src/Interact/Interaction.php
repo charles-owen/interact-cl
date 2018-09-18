@@ -4,7 +4,6 @@
  * Class that represents a single interaction
  */
 
-/// Classes associated with the Interact! system
 namespace CL\Interact;
 
 use CL\Course\Member;

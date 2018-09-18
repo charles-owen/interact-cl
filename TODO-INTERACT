@@ -1,7 +1,12 @@
 TODO: Interact: Search
 TODO: Adds an history entry indicating who closed an Interaction
+TODO: Button for resolve (quicker)
+TODO: Pull autoanswer into own system
+TODO: Autoanswer test page
 
+FIXME: Resolved not working sometimes for pending question?
 FIXME: Deletions are not detected by polling
+FIXME: Canned responses not allowing tags
 
 TODO: Works better when pasting in code
 TODO: Interact Images
