@@ -67,6 +67,9 @@ class Interaction extends InteractContent {
 				$this->discussionCnt = null;
 			}
 
+			if(!empty($row["{$prefix}deleted"])) {
+				$this->deleted = $row["{$prefix}deleted"] > 0;
+			}
 		}
     }
 
@@ -268,6 +271,10 @@ class Interaction extends InteractContent {
 			'type'=>$this->type
 		];
 
+		if($this->deleted) {
+			$data1['deleted'] = true;
+		}
+
 		if($this->type === self::QUESTION) {
 			$data1['state'] = $this->meta->get('public', Interact::INTERACTION_STATE, self::RESOLVED);
 			$escalated = $this->meta->get('public', Interact::ESCALATED, null);
@@ -321,4 +328,5 @@ class Interaction extends InteractContent {
     private $summary = '';
     private $discussionCnt = 0;
     private $discussions = [];
+    private $deleted = false;
 }

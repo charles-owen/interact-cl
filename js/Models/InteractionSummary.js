@@ -19,5 +19,6 @@ export const InteractionSummary = function(data) {
     this.closed = data.closed;
     this.state = data.state;
     this.escalated = data.escalated;
+	this.deleted = data.deleted;
 }
 

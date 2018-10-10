@@ -92,6 +92,11 @@ div.cl-interactions {
     background-color: $pending-escalated;
   }
 
+  div.cl-interact-summary.cl-answered.cl-escalated {
+    background-color: $answered-escalated;
+  }
+
+
   div.cl-interact-summary.cl-selected {
     border-left: 3px solid $selected-top;
     border-top: 3px solid $selected-top;

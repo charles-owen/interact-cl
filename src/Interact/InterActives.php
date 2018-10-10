@@ -107,11 +107,17 @@ SQL;
 	}
 
 	/**
-	 * Clean out expired records
-	 * @param int $time Current time
-	 * @return bool
+	 * Table cleaning. Removes expired active records.
+	 * @param int $time Time
+	 * @return string Text result of cleaning of null if not implemented.
 	 */
-	public function clean($time) {
+	public function clean($time=null) {
+		$result = '';
+
+		if($time === null) {
+			$time = time();
+		}
+
 		$sql = <<<SQL
 delete from $this->tablename
 where time < ?
@@ -120,7 +126,18 @@ SQL;
 		$exec = [$this->timeStr($time - self::ACTIVE_DURATION)];
 
 		$stmt = $this->pdo->prepare($sql);
-		return $stmt->execute($exec);
+		if($stmt->execute($exec) === false) {
+			return "Error accessing interactive table\n";
+		}
+
+		$cnt = $stmt->rowCount();
+		if($cnt > 0) {
+			$result .= "Removed $cnt expired Interact! active records\n";
+		} else {
+			$result .= "No expired Interact! active records\n";
+		}
+
+		return $result;
 	}
 
 }

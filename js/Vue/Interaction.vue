@@ -2,21 +2,22 @@
   <div class="cl-interaction">
     <mask-vue :mask="mask">Communicating with server...</mask-vue>
     <div v-if="!editing">
-      <cl-menu v-if="(staff || self) && !closed">
+      <cl-menu v-if="(staff || self)">
         <a><img :src="root + '/vendor/cl/site/img/menubars.png'"></a>
         <ul>
-          <li @click.stop="editMe"><a @click.prevent.stop="editMe"><img :src="root + '/vendor/cl/site/img/pen16.png'"> Edit</a></li>
+          <li v-if="!closed" @click.stop="editMe"><a @click.prevent.stop="editMe"><img :src="root + '/vendor/cl/site/img/pen16.png'"> Edit</a></li>
           <li @click.stop="deleteMe"><a @click.prevent.stop="deleteMe"><img :src="root + '/vendor/cl/site/img/x.png'"> Delete</a></li>
           <li v-if="data.gradingLink !== undefined && interaction.assign !== 'general'"><a :href="root + data.gradingLink + '/' + interaction.assign + '/' + interaction.memberid"
                  target="INTERACT_GRADING"><img :src="root + '/vendor/cl/interact/img/grading.png'"> Grading page</a></li>
-          <li v-if="resolvable" @click.stop="resolved"><a  @click.prevent.stop="resolved"><img :src="root + '/vendor/cl/site/img/check16.png'"> Resolved</a></li>
-          <li v-if="escalatable" @click.stop="escalate"><a  @click.prevent.stop="escalate"><img :src="root + '/vendor/cl/interact/img/up.png'"> Escalate</a></li>
-          <li v-if="staff" @click.stop="closeMe"><a  @click.prevent.stop="closeMe"><img :src="root + '/vendor/cl/interact/img/close.png'"> Close Interaction</a></li>
+          <li v-if="resolvable && !closed" @click.stop="resolved"><a  @click.prevent.stop="resolved"><img :src="root + '/vendor/cl/site/img/check16.png'"> Resolved</a></li>
+          <li v-if="!resolvable && !closed" @click.stop="unresolved"><a  @click.prevent.stop="unresolved"><img :src="root + '/vendor/cl/site/img/x.png'"> Unresolved</a></li>
+          <li v-if="!closed && escalatable" @click.stop="escalate"><a  @click.prevent.stop="escalate"><img :src="root + '/vendor/cl/interact/img/up.png'"> Escalate</a></li>
+          <li v-if="!closed && staff" @click.stop="closeMe"><a  @click.prevent.stop="closeMe"><img :src="root + '/vendor/cl/interact/img/close.png'"> Close Interaction</a></li>
           <!-- <li><a><img :src="root + '/vendor/cl/interact/img/close.png'"> Close discussion</a></li> -->
         </ul>
       </cl-menu>
         <h3 class="cl-interaction-heading">
-          <span>{{date}}<br>
+          <span><button v-if="staff && resolvable" class="cl-resolve" @click.prevent.stop="resolved">resolved</button> {{date}}<br>
   <button v-if="interaction.following !== NEVERFOLLOW" class="cl-follow" @click.prevent="follow()">
     <img v-if="interaction.following === FOLLOWING" :src="root + '/vendor/cl/interact/img/following.png'" alt="Following Interaction" height="16" width="92">
     <img v-if="interaction.following === NOTFOLLOWING" :src="root + '/vendor/cl/interact/img/follow.png'" alt="Follow Interaction" height="16" width="92">
@@ -186,6 +187,22 @@
 		            this.$site.toast(this, error);
 		        });
         },
+	      unresolved() {
+		      this.$site.api.post('/api/interact/interaction/' + this.interaction.id + '/unresolved', {})
+			      .then((response) => {
+				      if (!response.hasError()) {
+					      this.editing = false;
+					      const interaction = new Interaction(response.getData('interaction').attributes);
+					      this.$emit('reloaded', interaction);
+				      } else {
+					      this.$site.toast(this, response);
+				      }
+
+			      })
+			      .catch((error) => {
+				      this.$site.toast(this, error);
+			      });
+	      },
         escalate() {
 	        this.$site.api.post('/api/interact/interaction/' + this.interaction.id + '/escalate', {})
 		        .then((response) => {
@@ -224,9 +241,24 @@
 		        });
         },
 	      showHistory(history) {
-		      if(history.op === 'edit') {
+      		let msg = null;
+      		switch(history.op) {
+              case 'edit':
+              	msg = 'Edited';
+              	break;
+
+              case 'closed':
+              	msg = 'Closed';
+              	break;
+
+              case 'deleted':
+              	msg = 'Deleted';
+              	break;
+          }
+
+		      if(msg !== null) {
 			      const time = TimeFormatter.relativeUNIX(history.time, null, 'ddd, M-DD-YYYY h:mm:ssa');
-			      return `Edited ${time} by ${history.by}`;
+			      return `${msg} ${time} by ${history.by}`;
 		      }
 	      },
         follow() {

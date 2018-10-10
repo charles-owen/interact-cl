@@ -1,7 +1,8 @@
 import {Interact} from './Interact';
 import {InteractView} from './InteractView';
 import {InteractPageView} from './InteractPageView';
-import Vue from "vue";
+import {PageVue} from "site-cl/js/Vue/PageVue";
+import VinnieVue from './Autoanswer/Vinnie.vue';
 
 /**
  * Factory class to create Interact object and install Interact system
@@ -43,6 +44,8 @@ InteractFactory.create = function(site) {
         if(element !== null) {
         	new InteractPageView(site, interact, element);
         }
+
+        PageVue.create('div.cl-vinnie-vue', 'Vinnie Vue', VinnieVue);
     });
 
     return interact;

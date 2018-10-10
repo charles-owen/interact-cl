@@ -9,6 +9,7 @@ namespace CL\Interact;
 use CL\Course\Member;
 use CL\Course\Members;
 use CL\Site\Site;
+use CL\Tables\TableException;
 use CL\Users\User;
 
 /**
@@ -254,8 +255,12 @@ order by pin desc, time desc
 SQL;
 
 		// echo "\n" . $where->sub_sql($sql) . "\n";
-		$result = $where->execute($sql);
-		return $result->fetchAll(\PDO::FETCH_ASSOC);
+		try {
+			$result = $where->execute($sql);
+			return $result->fetchAll(\PDO::FETCH_ASSOC);
+		} catch(TableException $exception) {
+			return [];
+		}
 	}
 
 
@@ -412,6 +417,10 @@ SQL;
 
 		if(!empty($get['section'])) {
 			$query['sectionTag'] = $get['section'];
+		}
+
+		if(!empty($get['deleted'])) {
+			$query['deleted'] = $get['deleted'];
 		}
 
 		if(!$user->atLeast(Member::STAFF)) {

@@ -83,6 +83,10 @@ class InteractApi extends \CL\Users\Api\Resource {
 			case 'email':
 				return $this->email($site, $user, $server, $params, $time);
 
+			// /api/interact/autoanswer
+			case 'autoanswer':
+				return $this->autoanswer($site, $user, $server);
+
 			// /api/interact/tables
 			case 'tables':
 				return $this->tables($site, $server, new InteractTables($site->db));
@@ -332,7 +336,6 @@ class InteractApi extends \CL\Users\Api\Resource {
 	 * @param $time
 	 * @return JsonAPI
 	 * @throws APIException
-	 * @throws \CL\Tables\TableException
 	 */
 	private function interaction(Site $site, User $user, Server $server, array $params, $time) {
 		$interacts = new Interacts($site->db);
@@ -352,6 +355,8 @@ class InteractApi extends \CL\Users\Api\Resource {
 					}
 				}
 
+				$this->addHistory('deleted', $interaction, $user, $time);
+				$interacts->update($interaction);
 				$interacts->delete($interaction);
 				return new JsonAPI();
 			}
@@ -405,10 +410,14 @@ class InteractApi extends \CL\Users\Api\Resource {
 					$interaction->time = $time;
 					$interacts->update($interaction);
 				}
+			} else if($interaction !== null && count($params) === 3 && $params[2] === 'unresolved') {
+				if($interaction->type === Interaction::QUESTION) {
+					$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::PENDING);
+					$interaction->time = $time;
+					$interacts->update($interaction);
+				}
 			} else if($interaction !== null && count($params) === 3 && $params[2] === 'close') {
-				$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::CLOSED);
-				$interaction->time = $time;
-				$interacts->update($interaction);
+				$this->closeInteraction($interacts, $interaction, $user, $time);
 			} else if($interaction !== null && count($params) === 3 && $params[2] === 'escalate') {
 				if($interaction->type === Interaction::QUESTION) {
 					$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::PENDING);
@@ -527,6 +536,36 @@ class InteractApi extends \CL\Users\Api\Resource {
 		return $json;
 	}
 
+	private function closeInteraction(Interacts $interacts, Interaction $interaction, User $user, $time) {
+		$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::CLOSED);
+		$this->addHistory('closed', $interaction, $user, $time);
+		$interaction->time = $time;
+		$interacts->update($interaction);
+	}
+
+	/**
+	 * Add history item to an interaction.
+	 *
+	 * Does not update the table...
+	 *
+	 * @param string $op The operation, like 'edit' or 'closed'
+	 * @param Interaction $interaction
+	 * @param User $user
+	 * @param int $time
+	 */
+	private function addHistory($op, Interaction $interaction, User $user, $time) {
+		$history = $interaction->meta->get('public', Interact::HISTORY, []);
+		$history[] = [
+			'op'=>$op,
+			'time'=>$time,
+			'user'=>$user->id,
+			'member'=>$user->member->id,
+			'name'=>$user->displayName,
+			'role'=>$user->role
+		];
+		$interaction->meta->set('public', Interact::HISTORY, $history);
+		$interaction->time = $time;
+	}
 
 	/**
 	 * Get an interaction and discussions.
@@ -535,7 +574,6 @@ class InteractApi extends \CL\Users\Api\Resource {
 	 * @param $interactId
 	 * @return Interaction|null
 	 * @throws APIException
-	 * @throws \CL\Tables\TableException
 	 */
 	private function getInteraction(Site $site, User $user, $interactId, $time=null) {
 		$interacts = new Interacts($site->db);
@@ -571,6 +609,22 @@ class InteractApi extends \CL\Users\Api\Resource {
 		return $interaction;
 	}
 
+	private function autoanswer(Site $site, User $user, Server $server) {
+		$get = $server->get;
+		$this->ensure($get, 'text');
+		$text = Interact::sanitize($get['text']);
+
+		$answerer = new Answerer($site, $user);
+		$answer = $answerer->lookup($text, null, null);
+
+		$json = new JsonAPI();
+		if($answer !== null) {
+			$json->addData('autoanswer', 0, $answer['text']);
+		} else {
+			$json->addData('autoanswer', 0, '<p>**no answer**</p>');
+		}
+		return $json;
+	}
 
 	/**
 	 * /api/interact/summaries

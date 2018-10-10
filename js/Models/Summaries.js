@@ -23,8 +23,10 @@ export const Summaries = function(data) {
 	    // may be at a different place
 	    this.remove(summary);
 
-        // Add it
-        this.summaries.push(summary);
+        // Add it if not deleted
+	    if(summary.deleted !== true) {
+		    this.summaries.push(summary);
+	    }
 
         // We keep track of the oldest non-pinned post we
         // see so we can get more posts later on.

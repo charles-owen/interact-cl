@@ -6,12 +6,6 @@ tests/config.php
 _notes
 yarn-error.log
 
-# compiled output
-/dist
-/dist-server
-/tmp
-/out-tsc
-
 # IDEs and editors
 /.idea
 .project

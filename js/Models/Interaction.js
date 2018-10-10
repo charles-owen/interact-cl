@@ -31,6 +31,7 @@ export const Interaction = function(data) {
 	this.following = data.following;
 	this.state = data.state;
 	this.escalated = data.escalated;
+	this.deleted = data.deleted;
 
     this.discussions = [];
     if(data.discussions !== undefined) {

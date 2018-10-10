@@ -23,17 +23,23 @@ class InteractPolling {
 	 * @param array $post Post parameters, just the 'interact' parts
 	 * @param JsonAPI $json
 	 * @param int $time
-	 * @throws \CL\Tables\TableException
 	 */
 	public function poll(Site $site, Server $server, array $post, JsonAPI $json, $time) {
-		$interacts = new Interacts($site->db);
 		$user = $site->users->user;
+		if($user === null) {
+			// If the user is logged out
+			return;
+		}
+
+		$interacts = new Interacts($site->db);
 
 		//
 		// Discover any new summaries that are now available
 		//
 		if(isset($post['summaries'])) {
-			$data = $interacts->summariesData($site, $user, $post['summaries']);
+			$get = $post['summaries'];
+			$get['deleted'] = 'yes';
+			$data = $interacts->summariesData($site, $user, $get);
 			if(count($data) > 0) {
 				$json->addData('interact-summaries', 0, $data);
 			}

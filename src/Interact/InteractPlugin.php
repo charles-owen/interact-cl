@@ -84,6 +84,11 @@ class InteractPlugin extends \CL\Site\Plugin implements \CL\Site\IExtension {
 				return $view->whole();
 			});
 
+			$router->addRoute(['vinnie'], function(Site $site, Server $server, array $params, array $properties, $time) {
+				$view = new Autoanswer\VinnieView($site, $server);
+				return $view->vue();
+			});
+
 		} else if($object instanceof \CL\Course\CourseHomeView) {
 			$object->extend('interact_button', function($view, $args) {
 				if(!$view->user->atLeast(Member::STUDENT)) {
