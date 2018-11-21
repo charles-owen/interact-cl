@@ -1,8 +1,10 @@
 # CourseLib Interact component
 
-
+Interact! is a CourseLib package that allows students to ask 
+questions and receive answers from course staff.
 
 ***This is a work in progress***
+
 
 
 ## License
