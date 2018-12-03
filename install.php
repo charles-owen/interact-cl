@@ -4,4 +4,4 @@
  * Used by the site installer
  */
 
-return new CL\Site\Install\Package('\CL\Interact/InteractPlugin', '/dist');
+return new CL\Site\Install\Package('\CL\Interact\InteractPlugin', '/dist');
