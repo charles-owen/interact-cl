@@ -30,7 +30,7 @@ InteractConsole.install = function(Console) {
 
     Console.tables.add({
         title: 'Interact',
-        order: 12,
+        order: 50,
         api: '/api/interact/tables'
     });
 }
