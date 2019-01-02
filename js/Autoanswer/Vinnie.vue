@@ -10,21 +10,22 @@
 </template>
 
 <script>
-	import UserVueBase from 'users-cl/js/Vue/UserVueBase.vue';
-  import EditorVue from '../Vue/Editor.vue';
+	import EditorVue from '../Vue/Editor.vue';
+
+	const UserVueBase = Site.UserVueBase;
 
 	export default {
 		'extends': UserVueBase,
 		props: ['json'],
-		data: function() {
+		data: function () {
 			return {
-        text: '',
-        response: '<p class="center">Enter a message to see the response</p>'
+				text: '',
+				response: '<p class="center">Enter a message to see the response</p>'
 			}
 		},
-	  components: {
-		  interactEditor: EditorVue
-	  },
+		components: {
+			interactEditor: EditorVue
+		},
 		mounted() {
 			this.setTitle('Vinnie Vue');
 		},
@@ -33,23 +34,22 @@
 				console.log('submit');
 
 				let params = {
-				  text: this.text
+					text: this.text
 				}
 
 				this.$site.api.get('/api/interact/autoanswer', params)
-				    .then((response) => {
-				        if (!response.hasError()) {
-				        	this.response = response.getData('autoanswer').attributes;
-				console.log(response);
-				        } else {
-				            Site.toast(this, response);
-				        }
+					.then((response) => {
+						if (!response.hasError()) {
+							this.response = response.getData('autoanswer').attributes;
+						} else {
+							Site.toast(this, response);
+						}
 
-				    })
-				    .catch((error) => {
-				        Site.toast(this, error);
-				    });
-      }
+					})
+					.catch((error) => {
+						Site.toast(this, error);
+					});
+			}
 		}
 	}
 </script>

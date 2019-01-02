@@ -20,8 +20,6 @@ return function(\CL\Course\Course $course) {
 	 */
 	$course->add_section('FS18', '799', Section::Online);
 	$course->add_section('SS19', '899', Section::Online);
-
-	$course->gradedispute = '<a href="mailto:ta@msu.edu">Some TA</a>';
 };
 
 /// @endcond

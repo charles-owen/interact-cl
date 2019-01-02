@@ -53,12 +53,12 @@ class InterFollowsTest extends InteractDatabaseTestBase {
 		$time3 = $time2 + 10;
 		$interactives->set($user2, $instance2b, 217, $time3);
 		$a = $interactives->get(217, $time3);
-		$this->assertCount(3, $a);
+		$this->assertCount(2, $a);
 
 		// first fall off due to time
 		$time4 = $time1 + InterActives::ACTIVE_DURATION + 8;
 		$a = $interactives->get(217, $time4);
-		$this->assertCount(2, $a);
+		$this->assertCount(1, $a);
 
 		$interactives->set($user2, $instance2b, 299, $time4);
 		$a = $interactives->get(217, $time4);

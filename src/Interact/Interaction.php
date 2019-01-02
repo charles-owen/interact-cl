@@ -54,7 +54,6 @@ class Interaction extends InteractContent {
 
 		if($row !== null) {
 			$this->created = strtotime($row["{$prefix}created"]);
-			$this->time = strtotime($row["{$prefix}time"]);
 			$this->assignTag = $row["{$prefix}assigntag"];
 			$this->sectionTag = $row["{$prefix}sectiontag"];
 			$this->type = $row["{$prefix}type"];
