@@ -235,11 +235,6 @@ class Answerer {
         $this->answers[] = $answer;
     }
 
-    public function clear_user() {
-	    $this->user->member->meta->setCategory(self::PREFERENCES_KEY, []);
-	    $members = new Members($this->site->db);
-	    $members->writeMetaData($this->user->member);
-    }
 
     /// The collection of possible answers
     private $answers = [];

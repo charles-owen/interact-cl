@@ -72,7 +72,11 @@ class Interact {
 		return $purifier->purify($str);
 	}
 
-
+	/**
+	 * Return data suitable for sending to the client.
+	 * @param User $user Current user, so we know if they get the canned responses.
+	 * @return array
+	 */
 	public function data(User $user) {
 		$data = [];
 		if($user->staff && count($this->canned) !== 0) {
@@ -81,23 +85,6 @@ class Interact {
 		return $data;
 	}
 
-//    /**
-//     * Generate JavasScript necessary for this configuration
-//     */
-//    public function js(User $user) {
-//        $js = '';
-//
-//        if($user->staff) {
-//            foreach($this->canned as $canned) {
-//                $title = $canned['title'];
-//                $text = $canned['text'];
-//                $js .= 'INTERACT.add_canned("' .
-//                    addslashes($title) . '", "' . addslashes($text) . '");' . "\n";
-//            }
-//        }
-//
-//        return $js;
-//    }
 
     /**
      * Convert a date/time to the format we display

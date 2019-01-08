@@ -115,7 +115,6 @@ MSG;
 	 *
 	 * This is also called when all users are forced to follow an existing interaction
 	 * @param Interaction $interaction The new Interaction that has been added
-	 * @param bool $sendAll If true, send out to all users
 	 */
 	public function escalated(Interaction $interaction) {
 		$courseName = $this->site->course->name;
