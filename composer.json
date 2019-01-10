@@ -9,6 +9,9 @@
       "email": "cbowen@msu.edu"
     }
   ],
+  "require" : {
+    "cl/course": "^2.1"
+  },
   "autoload":{
     "psr-4": {
       "CL\\Interact\\": "src/Interact"
@@ -22,5 +25,10 @@
   ],
   "require": {
     "ezyang/htmlpurifier": "^4.10"
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "2.1.x-dev"
+    }
   }
 }
