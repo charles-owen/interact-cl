@@ -19,6 +19,10 @@ use CL\Course\Members;
  *
  */
 class Answerer {
+	/// User preferences key for autoanswer options.
+	///
+	/// Used to keep track of if a user has seem some topic so they
+	/// don't have to see it again
     const PREFERENCES_KEY = "autoanswer";
 
     /**
