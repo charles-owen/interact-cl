@@ -25,85 +25,85 @@
 </template>
 
 <script>
-  import {Member} from 'course-cl/js/Members/Member';
+  const Member = Site.Member;
 
   export default {
-      data: function() {
-          return {
-              me: null,
-              tas: [],
-              others: [],
-              user: null
-          }
-      },
-      mounted() {
-          Site.api.get('/api/interact/email', {})
+    data: function () {
+      return {
+        me: null,
+        tas: [],
+        others: [],
+        user: null
+      }
+    },
+    mounted() {
+      this.$site.api.get('/api/interact/email', {})
               .then((response) => {
-                  if (!response.hasError()) {
-                      this.newResponse(response);
-                  } else {
-                      Site.toast(this, response);
-                  }
+                if (!response.hasError()) {
+                  this.newResponse(response);
+                } else {
+                  this.$site.toast(this, response);
+                }
 
               })
               .catch((error) => {
-                  Site.toast(this, error);
+                this.$site.toast(this, error);
               });
+    },
+    methods: {
+      change(user, type) {
+        if (user.user.member.id === this.user.member.id) {
+          this.$site.api.post('/api/interact/email',
+                  {email: user.email, escalate: user.escalate})
+                  .then((response) => {
+                    if (!response.hasError()) {
+                      this.newResponse(response);
+                    } else {
+                      this.$site.toast(this, response);
+                    }
+
+                  })
+                  .catch((error) => {
+                    this.$site.toast(this, error);
+                  });
+        } else {
+          this.$site.api.post('/api/interact/email/' + user.user.member.id,
+                  {email: user.email, escalate: user.escalate})
+                  .then((response) => {
+                    if (!response.hasError()) {
+                      this.newResponse(response);
+                    } else {
+                      this.$site.toast(this, response);
+                    }
+
+                  })
+                  .catch((error) => {
+                    this.$site.toast(this, error);
+                  });
+        }
       },
-      methods: {
-          change(user, type) {
-		          if(user.user.member.id === this.user.member.id) {
-			          Site.api.post('/api/interact/email',
-                    {email: user.email, escalate: user.escalate})
-				          .then((response) => {
-					          if (!response.hasError()) {
-						          this.newResponse(response);
-					          } else {
-						          Site.toast(this, response);
-					          }
+      newResponse(response) {
+        const data = response.getData('interact-email').attributes;
+        const user = this.$store.state.user.user;
+        this.user = user;
 
-				          })
-				          .catch((error) => {
-					          Site.toast(this, error);
-				          });
-		          } else {
-			          Site.api.post('/api/interact/email/' + user.user.member.id,
-                    {email: user.email, escalate: user.escalate})
-				          .then((response) => {
-					          if (!response.hasError()) {
-						          this.newResponse(response);
-					          } else {
-						          Site.toast(this, response);
-					          }
+        this.me = null;
+        this.tas = [];
+        this.others = [];
+        for (let staff of data) {
+          let staffUser = new Users.User(staff.user);
+          staff.user = staffUser;
 
-				          })
-				          .catch((error) => {
-					          Site.toast(this, error);
-				          });
-		          }
-          },
-          newResponse(response) {
-              const data = response.getData('interact-email').attributes;
-              const user = this.$store.state.user.user;
-              this.user = user;
-
-              this.me = null;
-              this.tas = [];
-              this.others = [];
-              for(let staff of data) {
-                  let staffUser = new Users.User(staff.user);
-                  staff.user = staffUser;
-
-                  if(staffUser.member.id === user.member.id) {
-                      this.me = staff;
-                  } else if(staffUser.atLeast(Member.TA)) {
-                      this.tas.push(staff);
-                  } else {
-                      this.others.push(staff);
-                  }
-              }
+          if (staffUser.member.id === user.member.id) {
+            this.me = staff;
+          } else if (staffUser.atLeast(Member.TA)) {
+            this.tas.push(staff);
+          } else {
+            this.others.push(staff);
           }
+        }
       }
+    }
   }
 
 </script>

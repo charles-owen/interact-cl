@@ -735,8 +735,9 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		$ret = [];
 
+		$member = $user->member;
 		if($user->atLeast(Member::TA)) {
-			$staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true]);
+			$staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true, 'semester'=>$member->semester, 'section'=>$member->sectionId]);
 
 			foreach($staff as $staffUser) {
 				$ret[] = ['user'=>$staffUser->data(),
