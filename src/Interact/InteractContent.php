@@ -37,7 +37,14 @@ abstract class InteractContent {
 		    $user->member = $member;
 		    $this->user = $user;
 		    if(isset($row["{$prefix}message"])) {
-			    $this->message = $row["{$prefix}message"];
+		        $message = $row["{$prefix}message"];
+
+		        // Data from the database may or may not be UTF-8 encoded.
+                // This tests if it is. If it is not, we encode it.
+		        if(utf8_encode(utf8_decode($message)) !== $message) {
+                    $message = utf8_encode($message);
+                }
+			    $this->message = $message;
 		    }
 
 		    $this->time = strtotime($row["{$prefix}time"]);
@@ -137,13 +144,13 @@ abstract class InteractContent {
 	 * @return string HTML/truncated
 	 */
 	public function summarize() {
-		$summary = strip_tags($this->message);
+		$summary = strip_tags(utf8_decode($this->message));
 
 		// Since the data from the clients is UTF8, just truncating
 		// the string can lead to a broken multibyte character at
 		// the end, which breaks JSON encoding. This ensures that
 		// that cannot happen.
-		return utf8_encode(substr(utf8_decode($summary), 0, self::SummarizeMax));
+		return utf8_encode(substr($summary, 0, self::SummarizeMax));
 	}
 
 

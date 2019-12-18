@@ -87,6 +87,10 @@ class InteractApi extends \CL\Users\Api\Resource {
 			case 'autoanswer':
 				return $this->autoanswer($site, $user, $server);
 
+			// /api/interact/statistics
+            case 'statistics':
+                return $this->statistics($site, $user);
+
 			// /api/interact/tables
 			case 'tables':
 				return $this->tables($site, $server, new InteractTables($site->db));
@@ -94,6 +98,62 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		throw new APIException("Invalid API Path", APIException::INVALID_API_PATH);
 	}
+
+	private function statistics(Site $site, User $user) {
+        if(!$user->atLeast(Member::STAFF)) {
+            throw new APIException('Not authorized');
+        }
+
+        //
+        // Get the interaction and discussion statistics
+        //
+        $interacts = new Interacts($site->db);
+        $interactionStatistics = $interacts->statistics($site, $user->member->semester, $user->member->sectionId);
+
+        $discussions = new Discussions($site->db);
+        $discussionStatistics = $discussions->statistics($site, $user->member->semester, $user->member->sectionId);
+
+        //
+        // Merge them
+        //
+        $statistics = [];
+        foreach($interactionStatistics as $statistic) {
+            $user = $statistic['user'];
+            if(!isset($statistics[$user->id])) {
+                $statistics[$user->id] = ['user'=>$user, 'interactions'=>0, 'discussions'=>0];
+            }
+
+            $statistics[$user->id]['interactions'] = $statistic['interactions'];
+        }
+
+        foreach($discussionStatistics as $statistic) {
+            $user = $statistic['user'];
+            if(!isset($statistics[$user->id])) {
+                $statistics[$user->id] = ['user'=>$user, 'interactions'=>0, 'discussions'=>0];
+            }
+
+            $statistics[$user->id]['discussions'] = $statistic['discussions'];
+        }
+
+        $return = [];
+        foreach($statistics as $statistic) {
+            $user = $statistic['user'];
+            $return[] = [
+                'userId'=>$user->id,
+                'memberId'=>$user->member->id,
+                'user'=>$user->userId,
+                'name'=>$user->name,
+                'email'=>$user->email,
+                'role'=>$user->role(),
+                'interactions'=>$statistic['interactions'],
+                'discussions'=>$statistic['discussions']
+            ];
+        }
+
+        $json = new JsonAPI();
+        $json->addData('interact_statistics', 0, $return);
+        return $json;
+    }
 
 	/**
 	 * /api/interact/active/:instance
@@ -531,6 +591,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 		}
 
+		//print_r($interaction->data($site, $user));
 		$json = new JsonAPI();
 		$json->addData('interaction', $interaction->id, $interaction->data($site, $user));
 		return $json;
@@ -681,7 +742,6 @@ class InteractApi extends \CL\Users\Api\Resource {
 		}
 
 		$data = $interacts->summariesData($site, $user, $get);
-
 		$json = new JsonAPI();
 		$json->addData('interact-summaries', 0, $data);
 		return $json;

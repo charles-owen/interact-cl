@@ -4,6 +4,7 @@
 
 import ControlPanelVue from './ControlPanel.vue';
 import {Member} from 'course-cl/js/Members/Member'
+import InteractStatisticsComponent from './InteractStatistics.vue';
 
 /**
  * Installer for the Interact console components
@@ -27,6 +28,8 @@ InteractConsole.install = function(Console) {
         order: 1,
         component: ControlPanelVue
     });
+
+    Console.components.addRoute({route: '/interact/statistics', component: InteractStatisticsComponent});
 
     Console.tables.add({
         title: 'Interact',

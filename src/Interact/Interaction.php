@@ -59,7 +59,7 @@ class Interaction extends InteractContent {
 			$this->type = $row["{$prefix}type"];
 			$this->pin = +$row["{$prefix}pin"] == 1;
 			$this->private = +$row["{$prefix}private"] == 1;
-			$this->summary = $row["{$prefix}summary"];
+			$this->summary = utf8_encode($row["{$prefix}summary"]);
 			if(!empty($row["{$prefix}discussions"])) {
 				$this->discussionCnt = $row["{$prefix}discussions"];
 			} else {

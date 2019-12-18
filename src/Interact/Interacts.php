@@ -457,235 +457,48 @@ SQL;
 		return $data;
 	}
 
+    /**
+     * Compute statistics for interactions. This is the number of interactions by user.
+     * @param Site $site The Site object
+     * @param string $semester Semester code
+     * @param string $sectionId Section ID
+     * @return array Results as an array of arrays, each with keys 'user' and 'interactions'
+     * @throws TableException
+     */
+    public function statistics(Site $site, $semester, $sectionId) {
+        $fields = <<<FIELDS
+count(*) as interactions
+FIELDS;
 
-//
-//
-//    /**
-//     * @param \Section $section
-//     * @param array|null $categories
-//     * @param null $sectiontag
-//     * @return array
-//     */
-//    public function counts(\Section $section, array $categories=null, $sectiontag=null) {
-//        $users = new \Users($this->course);
-//        $usersTable = $users->get_tablename();
-//
-//        $where = '';
-//        $exec = array();
-//
-//        if(!(count($categories) == 1 && current($categories) === 'all')) {
-//            if ($categories !== null && count($categories) > 0) {
-//                $where .= "where (";
-//                $first = true;
-//                foreach ($categories as $tag) {
-//                    if ($first) {
-//                        $first = false;
-//                    } else {
-//                        $where .= " or ";
-//                    }
-//                    $where .= "assigntag=?";
-//                    $exec[] = $tag;
-//                }
-//                $where .= ")";
-//            }
-//        }
-//
-//        if($sectiontag !== null) {
-//            $exec[] = $sectiontag;
-//            if(strlen($where) > 0) {
-//                $where .= ' and sectiontag=?';
-//            } else {
-//                $where .= 'where sectiontag=?';
-//            }
-//        }
-//
-//        $qsection = $this->pdo()->quote($section->get_id());
-//
-//        $sql = <<<SQL
-//select type, count(*) as count
-//from $this->tablename interact
-//join $usersTable user
-//on interact.userid = user.id and user.section=$qsection
-//$where
-//group by type
-//SQL;
-//
-//        $stmt = $this->pdo()->prepare($sql);
-//        $stmt->execute($exec);
-//
-//        $result = array(Interaction::Announcement => 0, Interaction::Question => 0);
-//        foreach($stmt as $row) {
-//            $result[$row['type']] = $row['count'];
-//        }
-//
-//        return $result;
-//    }
+        $members = new Members($this->config);
+        $sql = $members->memberUserJoinSQL($fields, false, 'user_', 'member_');
 
+        $sql .= <<<SQL
+join $this->tablename interact
+on member.id=interact.memberid
+where member.semester=? and member.section=?
+group by member.id
+order by user.name
+SQL;
 
+        $pdo = $this->pdo();
 
-//    private function interaction_from_row($row) {
-//        $interaction = new Interaction($this->course,
-//            null,
-//            $row['assigntag'],
-//            $row['sectiontag'],
-//            $row['type'],
-//            $row['pin'] == 1,
-//            $row['private'] == 1,
-//            strtotime($row['time']));
-//
-//        $interaction->set_id($row['id']);
-//        $interaction->set_user($row['userid'], $row['name'], $row['role']);
-//        $interaction->from_xml($row['message']);
-//        $interaction->set_summary($row['summary']);
-//        $interaction->set_discussions($row['discussions']);
-//        return $interaction;
-//    }
-//
-//    /**
-//     * Delete an interaction from the table
-//     * @param $id ID for the interaction to delete
-//     */
-//    public function delete($id)
-//    {
-//        $sql = <<<SQL
-//delete from $this->tablename
-//where id=?
-//SQL;
-//
-//        $stmt = $this->pdo()->prepare($sql);
-//        $stmt->execute(array($id));
-//    }
+        $exec = [$semester, $sectionId];
+        $stmt = $pdo->prepare($sql);
 
-//    /*
-//     * The interactions iterator functionality
-//     */
-//
-//    /**
-//     * Start the process of iterating over interactions one at a time
-//     *
-//     * This is called first and starts the database query. The first record
-//     * is fetched and is available by calling $this->current. To advance to the next
-//     * record, call $this->advance
-//     *
-//     * @param \User $user User we are searching for.
-//     * @param array $categories Array of categories to search (usually assignment tags)
-//     * @param null $sectionTag Optional section tag to require
-//     * @param $before Only interactions before this date/time (null or empty string for all)
-//     * @param $after Only interactions after this date/time (null or empty string for all)
-//     * @param $query Optional query
-//     */
-//    public function select(\User $user, array $categories=null,
-//                           $sectionTag=null, $before=null, $after=null, $query='') {
-//        $exec = array();
-//        $exec[] = $user->get_section()->get_id();
-//        $where = '';
-//
-//        $pdo = $this->pdo();
-//
-//        $users = new \Users($this->course);
-//        $usersTable = $users->get_tablename();
-//        $discussions = new Discussions($this->course);
-//        $discussionsTable = $discussions->get_tablename();
-//
-//        // Optional before time parameter
-//        if($before !== null && $before !== '') {
-//            $where = "where interact.time < ?";
-//            $exec[] = date("Y-m-d H:i:s", $before);
-//        }
-//
-//        // Optional after time parameter
-//        if($after !== null && $after !== '') {
-//            if($where === '') {
-//                $where = "where interact.time > ?";
-//            } else {
-//                $where .= " and interact.time > ?";
-//            }
-//
-//            $exec[] = date("Y-m-d H:i:s", $after);
-//        }
-//
-//        if(!(count($categories) == 1 && current($categories) === 'all')) {
-//            if ($categories !== null && count($categories) > 0) {
-//                if($where === '') {
-//                    $where = "where (";
-//                } else {
-//                    $where .= " and (";
-//                }
-//
-//                $first = true;
-//                foreach ($categories as $tag) {
-//                    if ($first) {
-//                        $first = false;
-//                    } else {
-//                        $where .= " or ";
-//                    }
-//                    $where .= "assigntag=?";
-//                    $exec[] = $tag;
-//                }
-//
-//                $where .= ")";
-//            }
-//        }
-//
-//        if($sectionTag !== null && $sectionTag !== '') {
-//            if($where === '') {
-//                $where = "where sectiontag=?";
-//            } else {
-//                $where .= " and sectiontag=?";
-//            }
-//
-//            $exec[] = $sectionTag;
-//        }
-//
-//        if(!$user->is_staff()) {
-//            if($where === '') {
-//                $where = "where (private='0' or user.id=?)";
-//            } else {
-//                $where .= " and (private='0' or user.id=?)";
-//            }
-//
-//            $exec[] = $user->get_id();
-//        }
-//
-//        if($query !== null && $query !== '') {
-//            if($where === '') {
-//                $where = "where ";
-//            } else {
-//                $where .= " and ";
-//            }
-//
-//            $where .= "match(message,summary) against(? in natural language mode)";
-//            $exec[] = $query;
-//        }
-//
-//        $sql = <<<SQL
-//select interact.id as id, user.id as userid, assigntag, sectiontag, interact.time as time,
-//type, pin, private, summary, message, name, role, count(discussion.discuss) as discussions
-//from $this->tablename interact
-//join $usersTable user
-//on interact.userid=user.id and user.section=?
-//left join $discussionsTable discussion
-//on interact.id = discussion.interactid
-//$where
-//group by interact.id
-//order by pin desc, time desc
-//limit $this->limit
-//SQL;
-//
-//       // echo "\n" . $this->sub_sql($sql, $exec) . "\n";
-//        $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-//        try {
-//            $this->stmt = $pdo->prepare($sql);
-//            $this->stmt->execute($exec);
-//            $this->advance();
-//        } catch(\PDOException $exception) {
-//            echo $exception->getMessage();
-//        }
-//    }
+        // echo "\n" . $this->sub_sql($sql, $exec) . "\n";
+        $stmt->execute($exec);
+        $stats = [];
+        foreach($stmt->fetchAll(\PDO::FETCH_ASSOC) as $row) {
+            $user = new User($row, 'user_');
+            $member = new Member($row, 'member_');
+            $user->member = $member;
 
+            $stat = ['user'=>$user, 'interactions'=>$row['interactions']];
+            $stats[] = $stat;
+        }
 
-//    private $stmt = null;
-//    private $current = null;
-
+        return $stats;
+    }
 
 }

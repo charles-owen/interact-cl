@@ -1,5 +1,8 @@
 <template>
   <div class="cl-interact-console">
+    <ul>
+      <li><router-link to="console/interact/statistics">Statistics</router-link></li>
+    </ul>
     <div class="cl-group">
     <p v-if="me !== null"><label>
       <input type="checkbox" v-model="me.email" @change="change(me, 'email')"> Receive email on new Interacts!</label></p>
