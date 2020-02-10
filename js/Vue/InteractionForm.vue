@@ -28,7 +28,8 @@
 <script>
 	import EditorVue from './Editor.vue';
 	import {Interaction} from '../Models/Interaction';
-	import {Member} from 'course-cl/js/Members/Member';
+
+    const Member = Site.Member;
 
 	export default {
 		props: ['data', 'interaction'],
@@ -94,9 +95,9 @@
 
 				if(this.data.categories.length !== 1) {
 					data.assign = this.category;
-        } else {
-					data.assign = this.data.categories[0].tag;
-        }
+                } else {
+                    data.assign = this.data.categories[0].tag;
+                }
 
 				if(this.pin) {
 					data.pin = true;

@@ -14,8 +14,9 @@
 <script>
     import NewDiscussionVue from './NewDiscussion.vue';
     import DiscussionVue from './Discussion.vue';
-    import {Member} from 'course-cl/js/Members/Member';
     import {Interaction} from '../Models/Interaction';
+
+    const Member = Site.Member;
 
     export default {
         props: ['data', 'interaction', 'interactives'],

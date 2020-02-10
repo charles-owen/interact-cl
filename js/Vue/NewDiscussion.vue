@@ -10,72 +10,86 @@
 </template>
 
 <script>
+
   import EditorVue from './Editor.vue';
-  import MaskVue from 'site-cl/js/Vue/Mask.vue';
   import {Interaction} from '../Models/Interaction';
 
+  /**
+   * A view window for new discussions on an interaction.
+   *
+   * Displays the editor and sends new discussions to the server.
+   *
+   * @constructor NewDiscussionVue
+   */
   export default {
-      props: ['data', 'interaction'],
-      data: function() {
-          return {
-              text: '',
-              mask: false,
-              editor: EditorVue,
-              active: false
-          }
-      },
-      watch: {
-      	  interaction() {
-      	  	  this.text = '';
-	            this.$refs.editor.reset();
-      	  	  if(this.active) {
-      	  	  	this.active = false;
-		            this.$interact.setActive(null);
-              }
-          },
-      	  text() {
-      	  	if(!this.active && this.text.length > 0) {
-      	  		this.active = true;
-      	  		this.$interact.setActive(this.interaction.id);
-            }
-          }
-      },
-      components: {
-          maskVue: MaskVue
-      },
-      mounted() {
-      },
-      beforeDestroy() {
-	      this.$interact.setActive(null);
-      },
-      methods: {
-          submit() {
-              let params = {
-                message: this.text
-              }
-
-              this.mask = true;
-
-              this.$site.api.post('/api/interact/discuss/' + this.interaction.id, params)
-                  .then((response) => {
-                      this.mask = false;
-                      if (!response.hasError()) {
-  	                      const interaction = new Interaction(response.getData('interaction').attributes);
-                          this.$emit('reloaded', interaction);
-                          this.text = '';
-                          this.$refs.editor.reset();
-                      } else {
-	                      this.$site.toast(this, response);
-                      }
-
-                  })
-                  .catch((error) => {
-                      this.mask = false;
-	                    this.$site.toast(this, error);
-                  });
-
-          }
+    props: ['data', 'interaction'],
+    data: function () {
+      return {
+        text: '',
+        mask: false,
+        editor: EditorVue,
+        active: false,
+        activeId: 0
       }
+    },
+    watch: {
+      interaction() {
+        // If we change to a different interaction,
+        // we need to rest the editor.
+        if (+this.interaction.id !== this.activeId) {
+          this.activeId = +this.interaction.id;
+          this.text = '';
+          this.$refs.editor.reset();
+          if (this.active) {
+            this.active = false;
+            this.$interact.setActive(null);
+          }
+        }
+      },
+      text() {
+        if (!this.active && this.text.length > 0) {
+          this.active = true;
+          this.$interact.setActive(this.interaction.id);
+        }
+      }
+    },
+    components: {
+      maskVue: Site.MaskVue
+    },
+    mounted() {
+      this.activeId = +this.interaction.id;
+    },
+    beforeDestroy() {
+      this.$interact.setActive(null);
+    },
+    methods: {
+      submit() {
+        let params = {
+          message: this.text
+        }
+
+        this.mask = true;
+
+        this.$site.api.post('/api/interact/discuss/' + this.interaction.id, params)
+                .then((response) => {
+                  this.mask = false;
+                  if (!response.hasError()) {
+                    const interaction = new Interaction(response.getData('interaction').attributes);
+                    this.$emit('reloaded', interaction);
+                    this.text = '';
+                    this.$refs.editor.reset();
+                  } else {
+                    this.$site.toast(this, response);
+                  }
+
+                })
+                .catch((error) => {
+                  this.mask = false;
+                  this.$site.toast(this, error);
+                });
+
+      }
+    }
   }
 
 

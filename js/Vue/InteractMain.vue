@@ -27,7 +27,9 @@
   import NewInteractionVue from './NewInteraction.vue';
   import WelcomeVue from './Welcome.vue';
   import {Summaries} from '../Models/Summaries';
-  import {Member} from 'course-cl/js/Members/Member';
+
+  const Member = Site.Member;
+
 
   /**
    * Interact main window

@@ -8,44 +8,44 @@
 
 <script>
   import {Interaction} from '../Models/Interaction';
-  import {Member} from 'course-cl/js/Members/Member';
-  import MaskVue from 'site-cl/js/Vue/Mask.vue';
   import InteractionFormVue from './InteractionForm.vue';
 
+  const Member = Site.Member;
+
   export default {
-      props: ['data'],
-      data: function() {
-          return {
-            mask: false
-          }
-      },
-      components: {
-          interactionForm: InteractionFormVue,
-          maskVue: MaskVue
-      },
-      methods: {
-          submit(data) {
-              this.mask = true;
-              Site.api.post('/api/interact/interaction', data)
-                  .then((response) => {
-                      this.mask = false;
-
-                      if (!response.hasError()) {
-                          const interaction = response.getData('interaction').attributes;
-                          this.$emit('interaction', interaction);
-                      } else {
-                          Site.toast(this, response);
-                      }
-
-                  })
-                  .catch((error) => {
-                      this.mask = false;
-                      Site.toast(this, error);
-                  });
-          },
-          cancel() {
-            this.$emit('cancel');
-          }
+    props: ['data'],
+    data: function () {
+      return {
+        mask: false
       }
+    },
+    components: {
+      interactionForm: InteractionFormVue,
+      maskVue: Site.MaskVue
+    },
+    methods: {
+      submit(data) {
+        this.mask = true;
+        this.$site.api.post('/api/interact/interaction', data)
+                .then((response) => {
+                  this.mask = false;
+
+                  if (!response.hasError()) {
+                    const interaction = response.getData('interaction').attributes;
+                    this.$emit('interaction', interaction);
+                  } else {
+                    this.$site.toast(this, response);
+                  }
+
+                })
+                .catch((error) => {
+                  this.mask = false;
+                  this.$site.toast(this, error);
+                });
+      },
+      cancel() {
+        this.$emit('cancel');
+      }
+    }
   }
 </script>

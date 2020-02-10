@@ -3,8 +3,9 @@
  */
 
 import ControlPanelVue from './ControlPanel.vue';
-import {Member} from 'course-cl/js/Members/Member'
 import InteractStatisticsComponent from './InteractStatistics.vue';
+
+const Member = Site.Member;
 
 /**
  * Installer for the Interact console components

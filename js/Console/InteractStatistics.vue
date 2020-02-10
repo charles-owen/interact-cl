@@ -32,8 +32,6 @@
 </template>
 
 <script>
-    const ConsoleComponentBase = Site.ConsoleComponentBase;
-
     const SortKey = {
         User: 1,
         Name: 2,
@@ -49,7 +47,7 @@
      * @constructor InteractStatisticsVue
      */
     export default {
-        extends: ConsoleComponentBase,
+        extends: Site.ConsoleComponentBase,
         data: function() {
             return {
                 statistics: [],

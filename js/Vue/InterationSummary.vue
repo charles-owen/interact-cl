@@ -11,8 +11,8 @@
 
 <script>
   import {Interaction} from '../Models/Interaction';
-  import {TimeFormatter} from 'site-cl/js/TimeFormatter';
-  import {Member} from 'course-cl/js/Members/Member';
+
+  const Member = Site.Member;
 
   export default {
       props: ['item', 'selected'],
@@ -46,7 +46,7 @@
           set() {
           	this.cls = 'cl-interact-summary';
 
-	          this.date = TimeFormatter.relativeUNIX(this.item.time, null, 'M-DD-YYYY'); //  TimeFormatter.absoluteUNIX(this.interaction.created, 'short');
+	          this.date = this.$site.TimeFormatter.relativeUNIX(this.item.time, null, 'M-DD-YYYY');
 	          if(this.selected) {
 		          this.cls += ' cl-selected';
 	          }

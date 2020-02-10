@@ -7,7 +7,7 @@
 </template>
 
 <script>
-	import {Member} from 'course-cl/js/Members/Member';
+    const Member = Site.site.Member;
 
   export default {
   	props: ['data'],
