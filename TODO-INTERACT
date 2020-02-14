@@ -1,7 +1,5 @@
 TODO: Interact: Search
 
-FIXME: Updates to the interaction destroy the editor and any current response in progress
-FIXME: Should send escalations/email to only the staff for the current section. Is sending to all.
 FIXME: Canned responses not allowing tags
 
 TODO: Works better when pasting in code

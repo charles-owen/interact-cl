@@ -117,7 +117,6 @@ MSG;
 	 * @param Interaction $interaction The new Interaction that has been added
 	 */
 	public function escalated(Interaction $interaction) {
-		$courseName = $this->site->course->name;
 		$id = $interaction->id;
 		$message = $interaction->message;
 
@@ -150,7 +149,12 @@ MSG;
 		$recipients = [];
 
 		$members = new Members($this->site->db);
-		$staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true]);
+		$staff = $members->query([
+		    'semester'=>$this->user->member->semester,
+		    'section'=>$this->user->member->sectionId,
+		    'atLeast'=>Member::STAFF,
+            'metadata'=>true
+        ]);
 		foreach($staff as $staffUser) {
 			$receiving = $staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $staffUser->atLeast(Member::TA));
 			if($receiving) {
