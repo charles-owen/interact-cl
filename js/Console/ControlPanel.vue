@@ -2,6 +2,7 @@
   <div class="cl-interact-console">
     <ul>
       <li><router-link to="console/interact/statistics">Statistics</router-link></li>
+      <li v-if="answerer !== null"><a :href="root + '/cl/vinnie'">Vinnie Vue</a></li>
     </ul>
     <div class="cl-group">
     <p v-if="me !== null"><label>
@@ -28,19 +29,20 @@
 </template>
 
 <script>
-  const Member = Site.Member;
+  const ConsoleComponentBase = Site.ConsoleComponentBase;
 
   export default {
+    'extends': ConsoleComponentBase,
     data: function () {
       return {
         me: null,
         tas: [],
         others: [],
-        user: null
+        answerer: null
       }
     },
     mounted() {
-      this.$site.api.get('/api/interact/email', {})
+      this.$site.api.get('/api/interact/cp', {})
               .then((response) => {
                 if (!response.hasError()) {
                   this.newResponse(response);
@@ -87,8 +89,6 @@
       },
       newResponse(response) {
         const data = response.getData('interact-email').attributes;
-        const user = this.$store.state.user.user;
-        this.user = user;
 
         this.me = null;
         this.tas = [];
@@ -97,14 +97,17 @@
           let staffUser = new Users.User(staff.user);
           staff.user = staffUser;
 
-          if (staffUser.member.id === user.member.id) {
+          if (staffUser.member.id === this.user.member.id) {
             this.me = staff;
-          } else if (staffUser.atLeast(Member.TA)) {
+          } else if (staffUser.atLeast(this.$site.Member.TA)) {
             this.tas.push(staff);
           } else {
             this.others.push(staff);
           }
         }
+
+        const answerer = response.getData('interact-answerer');
+        this.answerer = answerer !== null ? answerer.attributes : null;
       }
     }
   }

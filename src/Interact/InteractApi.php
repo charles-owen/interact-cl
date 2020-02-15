@@ -83,6 +83,10 @@ class InteractApi extends \CL\Users\Api\Resource {
 			case 'email':
 				return $this->email($site, $user, $server, $params, $time);
 
+			// /api/interact/cp
+            case 'cp':
+                return $this->controlPanelInfo($site, $user, $server, $params, $time);
+
 			// /api/interact/autoanswer
 			case 'autoanswer':
 				return $this->autoanswer($site, $user, $server);
@@ -793,27 +797,60 @@ class InteractApi extends \CL\Users\Api\Resource {
 			}
 		}
 
-		$ret = [];
-
-		$member = $user->member;
-		if($user->atLeast(Member::TA)) {
-			$staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true, 'semester'=>$member->semester, 'section'=>$member->sectionId]);
-
-			foreach($staff as $staffUser) {
-				$ret[] = ['user'=>$staffUser->data(),
-					'email'=>$staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $staffUser->atLeast(Member::TA)),
-  				    'escalate'=>$staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $staffUser->atLeast(Member::TA))
-				];
-			}
-		} else {
-			$ret[] = ['user'=>$user->data(),
-				'email'=>$user->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $user->atLeast(Member::TA)),
-				'escalate'=>$user->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $user->atLeast(Member::TA))
-			];
-		}
-
-		$json = new JsonAPI();
-		$json->addData('interact-email', 0, $ret);
-		return $json;
+		return $this->controlPanelInfo($site, $user, $server, $params, $time);
 	}
+
+    /**
+     * /api/interact/cp
+     *
+     * GET will get control panel support information:
+     *    Autoanswer status
+     *    All staff interact email statuses
+     *
+     * @param Site $site
+     * @param User $user
+     * @param Server $server
+     * @param array $params
+     * @param $time
+     * @return JsonAPI
+     * @throws APIException
+     */
+    private function controlPanelInfo(Site $site, User $user, Server $server, array $params, $time) {
+        $this->isUser($site, Member::STAFF);
+
+        $json = new JsonAPI();
+
+        $members = new Members($site->db);
+
+        $ret = [];
+
+        $member = $user->member;
+        if($user->atLeast(Member::TA)) {
+            $staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true, 'semester'=>$member->semester, 'section'=>$member->sectionId]);
+
+            foreach($staff as $staffUser) {
+                $ret[] = ['user'=>$staffUser->data(),
+                    'email'=>$staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $staffUser->atLeast(Member::TA)),
+                    'escalate'=>$staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $staffUser->atLeast(Member::TA))
+                ];
+            }
+        } else {
+            $ret[] = ['user'=>$user->data(),
+                'email'=>$user->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $user->atLeast(Member::TA)),
+                'escalate'=>$user->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_ESCALATION, $user->atLeast(Member::TA))
+            ];
+        }
+
+        $json->addData('interact-email', 0, $ret);
+
+
+        $answerer = new Answerer($site, $user);
+        if($answerer->answerer !== null) {
+            $json->addData('interact-answerer', 0, $answerer->answerer);
+        }
+
+        return $json;
+    }
+
+
 }

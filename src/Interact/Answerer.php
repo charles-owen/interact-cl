@@ -17,6 +17,7 @@ use CL\Course\Members;
  * Given a string, this class tries to automatically answer a given
  * user question based on regular expression analysis of questions.
  *
+ * @property string answerer User id for autoanswer user or null if none
  */
 class Answerer {
 	/// User preferences key for autoanswer options.
