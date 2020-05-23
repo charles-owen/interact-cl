@@ -35,7 +35,7 @@
     watch: {
       interaction() {
         // If we change to a different interaction,
-        // we need to rest the editor.
+        // we need to reset the editor.
         if (+this.interaction.id !== this.activeId) {
           this.activeId = +this.interaction.id;
           this.text = '';
@@ -46,11 +46,23 @@
           }
         }
       },
+      /// Called whenever text is added to this.text. Basically
+      /// whenever a user types a key
       text() {
-        if (!this.active && this.text.length > 0) {
-          this.active = true;
-          this.$interact.setActive(this.interaction.id);
+        if(!this.active) {
+          // If we are not active and have added some text, we become active
+          if (this.text.length > 0) {
+            this.active = true;
+            this.$interact.setActive(this.interaction.id);
+          }
+        } else {
+          // If we are active and have deleted all entered text, we become inactive
+          if(this.text.length === 0) {
+            this.active = false;
+            this.$interact.setActive(null);
+          }
         }
+
       }
     },
     components: {
@@ -77,6 +89,8 @@
                     const interaction = new Interaction(response.getData('interaction').attributes);
                     this.$emit('reloaded', interaction);
                     this.text = '';
+                    this.active = false;
+                    this.$interact.setActive(null);
                     this.$refs.editor.reset();
                   } else {
                     this.$site.toast(this, response);

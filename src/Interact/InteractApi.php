@@ -404,7 +404,6 @@ class InteractApi extends \CL\Users\Api\Resource {
 	private function interaction(Site $site, User $user, Server $server, array $params, $time) {
 		$interacts = new Interacts($site->db);
 
-		$interactId = 0;
 		$interaction = null;
 		if(count($params) > 1) {
 			$interactId = +$params[1];
@@ -528,7 +527,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 
 				// Set all staff who currently are receiving email as following
 				$members = new Members($site->db);
-				$staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true]);
+				$staff = $members->query(['atLeast'=>Member::STAFF, 'metadata'=>true, 'semester'=>$user->member->semester, 'section'=>$user->member->sectionId]);
 				foreach($staff as $staffUser) {
 					$receiving = $staffUser->member->meta->get(Interact::INTERACT_CATEGORY, Interact::RECEIVE_MAIL, $staffUser->atLeast(Member::TA));
 					if($receiving) {
