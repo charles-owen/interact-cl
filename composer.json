@@ -10,7 +10,7 @@
     }
   ],
   "require" : {
-    "cl/course": "^2.1"
+    "cl/course": "^2.2"
   },
   "autoload":{
     "psr-4": {
@@ -24,11 +24,11 @@
     }
   ],
   "require": {
-    "ezyang/htmlpurifier": "^4.10"
+    "ezyang/htmlpurifier": "^4.13"
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "2.1.x-dev"
+      "dev-master": "2.2.x-dev"
     }
   }
 }
