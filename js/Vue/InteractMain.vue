@@ -98,7 +98,11 @@
           select(id) {
       		  if(id !== this.id && this.$router !== undefined) {
       		  	if(id === 0) {
-		          this.$router.push(Site.root + '/cl/interact');
+      		  	  // If there is not question selected, we are already
+                // on the root page.
+		            if(this.id !== undefined) {
+		              this.$router.push(Site.root + '/cl/interact');
+                }
               } else {
 		            this.$router.push(Site.root + '/cl/interact/' + id);
               }
