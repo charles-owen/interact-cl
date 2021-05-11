@@ -16,7 +16,7 @@
     "ckeditor5-cl": ">=0.0.3",
     "console-cl": ">=0.0.1",
     "course-cl": ">=0.0.1",
-    "dompurify": "^1.0.7",
+    "dompurify": "^2.2.8",
     "site-cl": ">=0.0.1",
     "users-cl": ">=0.0.1"
   }

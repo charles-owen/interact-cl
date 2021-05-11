@@ -94,7 +94,7 @@
         this.tas = [];
         this.others = [];
         for (let staff of data) {
-          let staffUser = new Users.User(staff.user);
+          let staffUser = new Site.User(staff.user);
           staff.user = staffUser;
 
           if (staffUser.member.id === this.user.member.id) {
