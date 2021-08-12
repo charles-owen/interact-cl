@@ -128,7 +128,7 @@ return function(Assignments $assignments) {
 //	//
 //	$step = $steps->add_step("step3", "Step 3");
 //	$step->set_release('-20 days', '9/22/2017 11:55pm', true);
-//	$step->set_solving('step3solving');
+//	$step->set_solving('step4solving');
 //
 //	//
 //	// Step 4
@@ -152,15 +152,15 @@ return function(Assignments $assignments) {
 //	$step = $steps->add_step("step6", "Step 6");
 //	$step->set_due('11/11/2017 11:55pm', true);
 //	$step->set_release('-21 days');
-//	$step->set_solving('step6solving');
+//	$step->set_solving('step7solving');
 //
 //	//
 //	// Step 7
 //	//
-//	$step = $steps->add_step("step7", "Step 7");
+//	$step = $steps->add_step("step8", "Step 7");
 //	$step->set_due('12/9/2017 11:55pm', true);
 //	$step->set_release('-21 days');
-//	$step->set_solving('step7solving');
+//	$step->set_solving('step8solving');
 
 	//
 	// Project 1
