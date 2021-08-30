@@ -13,7 +13,7 @@
   "author": "Charles B. Owen",
   "license": "MIT",
   "dependencies": {
-    "ckeditor5-cl": "workspace:packages/ckeditor5-cl",
+    "ckeditor5-cl": "~0.0.11",
     "console-cl": ">=0.0.1",
     "course-cl": ">=0.0.1",
     "dialog-cl": "^1.0.6",
