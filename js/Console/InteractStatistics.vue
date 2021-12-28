@@ -5,17 +5,17 @@
         </div>
         <table class="small">
             <tr>
-                <th @click.prevent="setSortBy(SortKey.User)" style="cursor:pointer"><img v-if="sortKey===SortKey.User" :src="root + '/vendor/cl/site/img/check16.png'">
+                <th @click.prevent="setSortBy(SortKey.User)" style="cursor:pointer"><img v-if="sortKey===SortKey.User" :src="root + '/cl/img/check16.png'">
                     User ID</th>
-                <th @click.prevent="setSortBy(SortKey.Name)" style="cursor:pointer"><img v-if="sortKey===SortKey.Name" :src="root + '/vendor/cl/site/img/check16.png'">
+                <th @click.prevent="setSortBy(SortKey.Name)" style="cursor:pointer"><img v-if="sortKey===SortKey.Name" :src="root + '/cl/img/check16.png'">
                     Name</th>
-                <th @click.prevent="setSortBy(SortKey.Email)" style="cursor:pointer"><img v-if="sortKey===SortKey.Email" :src="root + '/vendor/cl/site/img/check16.png'">
+                <th @click.prevent="setSortBy(SortKey.Email)" style="cursor:pointer"><img v-if="sortKey===SortKey.Email" :src="root + '/cl/img/check16.png'">
                     Email</th>
-                <th @click.prevent="setSortBy(SortKey.Role)" style="cursor:pointer"><img v-if="sortKey===SortKey.Role" :src="root + '/vendor/cl/site/img/check16.png'">
+                <th @click.prevent="setSortBy(SortKey.Role)" style="cursor:pointer"><img v-if="sortKey===SortKey.Role" :src="root + '/cl/img/check16.png'">
                     Role</th>
-                <th @click.prevent="setSortBy(SortKey.Interactions)" style="cursor:pointer"><img v-if="sortKey===SortKey.Interactions" :src="root + '/vendor/cl/site/img/check16.png'">
+                <th @click.prevent="setSortBy(SortKey.Interactions)" style="cursor:pointer"><img v-if="sortKey===SortKey.Interactions" :src="root + '/cl/img/check16.png'">
                     Interactions</th>
-                <th @click.prevent="setSortBy(SortKey.Discussions)" style="cursor:pointer"><img v-if="sortKey===SortKey.Discussions" :src="root + '/vendor/cl/site/img/check16.png'">
+                <th @click.prevent="setSortBy(SortKey.Discussions)" style="cursor:pointer"><img v-if="sortKey===SortKey.Discussions" :src="root + '/cl/img/check16.png'">
                     Discussions</th>
             </tr>
             <tr v-for="statistic in statistics" >

@@ -3,14 +3,14 @@
     <mask-vue :mask="mask">Communicating with server...</mask-vue>
     <div v-if="!editing">
       <cl-menu v-if="(staff || self)">
-        <a><img :src="root + '/vendor/cl/site/img/menubars.png'"></a>
+        <a><img :src="root + '/cl/img/menubars.png'"></a>
         <ul>
-          <li v-if="!closed" @click.stop="editMe"><a @click.prevent.stop="editMe"><img :src="root + '/vendor/cl/site/img/pen16.png'"> Edit</a></li>
-          <li @click.stop="deleteMe"><a @click.prevent.stop="deleteMe"><img :src="root + '/vendor/cl/site/img/x.png'"> Delete</a></li>
+          <li v-if="!closed" @click.stop="editMe"><a @click.prevent.stop="editMe"><img :src="root + '/cl/img/pen16.png'"> Edit</a></li>
+          <li @click.stop="deleteMe"><a @click.prevent.stop="deleteMe"><img :src="root + '/cl/img/x.png'"> Delete</a></li>
           <li v-if="data.gradingLink !== undefined && interaction.assign !== 'general'"><a :href="root + data.gradingLink + '/' + interaction.assign + '/' + interaction.memberid"
                  target="INTERACT_GRADING"><img :src="root + '/vendor/cl/interact/img/grading.png'"> Grading page</a></li>
-          <li v-if="resolvable && !closed" @click.stop="resolved"><a  @click.prevent.stop="resolved"><img :src="root + '/vendor/cl/site/img/check16.png'"> Resolved</a></li>
-          <li v-if="!resolvable && !closed" @click.stop="unresolved"><a  @click.prevent.stop="unresolved"><img :src="root + '/vendor/cl/site/img/x.png'"> Unresolved</a></li>
+          <li v-if="resolvable && !closed" @click.stop="resolved"><a  @click.prevent.stop="resolved"><img :src="root + '/cl/img/check16.png'"> Resolved</a></li>
+          <li v-if="!resolvable && !closed" @click.stop="unresolved"><a  @click.prevent.stop="unresolved"><img :src="root + '/cl/img/x.png'"> Unresolved</a></li>
           <li v-if="!closed && escalatable" @click.stop="escalate"><a  @click.prevent.stop="escalate"><img :src="root + '/vendor/cl/interact/img/up.png'"> Escalate</a></li>
           <li v-if="!closed && staff" @click.stop="closeMe"><a  @click.prevent.stop="closeMe"><img :src="root + '/vendor/cl/interact/img/close.png'"> Close Interaction</a></li>
           <!-- <li><a><img :src="root + '/vendor/cl/interact/img/close.png'"> Close discussion</a></li> -->
