@@ -16,8 +16,8 @@
     "ckeditor5-cl": "~0.0.11",
     "console-cl": ">=0.0.1",
     "course-cl": ">=0.0.1",
-    "dialog-cl": "^1.0.6",
-    "dompurify": "^2.2.9",
+    "dialog-cl": "^1.0.7",
+    "dompurify": "^2.3.4",
     "site-cl": ">=0.0.1",
     "users-cl": ">=0.0.1",
     "vue": "^2.6.14"
