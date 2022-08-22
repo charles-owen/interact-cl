@@ -17,9 +17,9 @@
     "console-cl": ">=0.0.1",
     "course-cl": ">=0.0.1",
     "dialog-cl": "^1.0.7",
-    "dompurify": "^2.3.6",
+    "dompurify": "^2.3.10",
     "site-cl": ">=0.0.1",
     "users-cl": ">=0.0.1",
-    "vue": "^2.6.14"
+    "vue": "^2.7.9"
   }
 }
