@@ -47,7 +47,7 @@
                     .create( this.$refs['textarea'], options)
                     .then( editor => {
                         this.editor = editor;
-                        editor.setData(this.value);
+                       // editor.setData(this.value);
 
                         editor.model.document.on( 'change:data', ( evt, data ) => {
                             this.$emit('input', editor.getData());

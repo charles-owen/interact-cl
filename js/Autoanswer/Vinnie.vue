@@ -31,8 +31,6 @@
 		},
 		methods: {
 			submit() {
-				console.log('submit');
-
 				let params = {
 					text: this.text
 				}
