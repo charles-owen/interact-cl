@@ -40,6 +40,7 @@
 
   export default {
     props: ['interaction', 'discussion'],
+    emits: ['select', 'reloaded'],
     data: function () {
       return {
         root: Site.root,

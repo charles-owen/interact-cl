@@ -17,6 +17,7 @@
 
   export default {
       props: ['selected', 'data'],
+    emits: ['reloaded', 'deleted', 'select'],
       data: function() {
           return {
               root: this.$site.root,
@@ -59,6 +60,7 @@
 
                   })
                   .catch((error) => {
+                    console.log('error')
               	    this.interaction = null;
 	                  this.$site.toast(this, error);
                   });

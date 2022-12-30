@@ -47,6 +47,7 @@
 
     export default {
         props: ['interaction', 'data'],
+      emits: ['select', 'deleted', 'reloaded'],
         data: function () {
             return {
                 root: Site.root,

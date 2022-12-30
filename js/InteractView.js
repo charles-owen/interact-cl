@@ -1,6 +1,8 @@
 import InteractClosedVue from './Vue/InteractClosed.vue';
 import InteractMainVue from './Vue/InteractMain.vue';
 
+const VueHelper = Site.VueHelper
+
 /**
  * Interact when presented as an element on an existing page.
  *
@@ -18,11 +20,7 @@ export const InteractView = function(site, interact, element) {
 
     const store = site.store;
 
-    new site.Vue({
-        el: element,
-	    site,
-        store,
-	    interact,
+    const app = VueHelper.createApp({
         data: function () {
             return {
                 data: data,
@@ -45,4 +43,9 @@ export const InteractView = function(site, interact, element) {
             }
         }
     })
+
+    app.config.globalProperties.$site = site
+    app.config.globalProperties.$interact = interact
+    app.use(store)
+    VueHelper.mount(app, element)
 }

@@ -6,22 +6,23 @@
 </template>
 
 <script>
-  import InteractionSummaryVue from './InterationSummary.vue';
+import InteractionSummaryVue from './InterationSummary.vue';
 
-  export default {
-      props: ['summaries', 'selected'],
-      components: {
-          interactionSummary: InteractionSummaryVue
-      },
-      mounted() {
-      },
-      methods: {
-          more() {
-              this.summaries.fetch();
-          },
-          select(id) {
-              this.$emit('select', id);
-          }
-      }
+export default {
+  props: ['summaries', 'selected'],
+  emits: ['select'],
+  components: {
+    interactionSummary: InteractionSummaryVue
+  },
+  mounted() {
+  },
+  methods: {
+    more() {
+      this.summaries.fetch();
+    },
+    select(id) {
+      this.$emit('select', id);
+    }
   }
+}
 </script>

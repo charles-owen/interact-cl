@@ -58,7 +58,7 @@ export const Summaries = function(data) {
     this.remove = function(summary) {
 	    // Does this summary exist?
 	    for(let i in this.summaries) {
-		    if(this.summaries[i].id === summary.id) {
+		    if(this.summaries[i].id == summary.id) {
 			    this.summaries.splice(i, 1);
 			    return true;
 		    }
@@ -98,6 +98,7 @@ export const Summaries = function(data) {
 
             })
             .catch((error) => {
+				console.log('error2')
                 Site.toast(this, error);
             });
     }

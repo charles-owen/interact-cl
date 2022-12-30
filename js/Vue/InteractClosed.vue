@@ -11,6 +11,7 @@
 
   export default {
   	props: ['data'],
+    emits: ['open'],
       data: function() {
           return {
               root: Site.root,

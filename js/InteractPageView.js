@@ -1,4 +1,7 @@
 import InteractMainVue from './Vue/InteractMain.vue';
+import { createRouter, createWebHistory } from 'vue-router'
+
+const VueHelper = Site.VueHelper
 
 /**
  * Interact when presented as a complete Vue-based page.
@@ -29,17 +32,12 @@ export const InteractPageView = function(site, interact, element) {
 		{path: site.root + '/cl/interact/:id', component: InteractMainVue, props: true}
 	];
 
-	const router = new Site.VueRouter({
+	const router = createRouter({
+		history: createWebHistory(),
 		routes: routes,
-		mode: 'history'
 	})
 
-	new site.Vue({
-		el: element,
-		site,
-		store,
-		router,
-		interact,
+	const app = VueHelper.createApp({
 		data: function () {
 			return {
 				data: data
@@ -54,4 +52,10 @@ export const InteractPageView = function(site, interact, element) {
 
 		}
 	})
+
+	app.config.globalProperties.$site = site
+	app.config.globalProperties.$interact = interact
+	app.use(store)
+	app.use(router)
+	VueHelper.mount(app, element)
 }

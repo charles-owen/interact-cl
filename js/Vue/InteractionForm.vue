@@ -33,6 +33,7 @@
 
 	export default {
 		props: ['data', 'interaction'],
+    emits: ['submit', 'cancel'],
 		data: function() {
 			return {
 				question: Interaction.QUESTION,

@@ -16,6 +16,7 @@
 
   export default {
       props: ['item', 'selected'],
+    emits: ['select'],
       data: function() {
           return {
               root: Site.root,

@@ -3,7 +3,7 @@
     <mask-vue :mask="mask">Communicating with server...</mask-vue>
     <h4>Contribute to the discussion</h4>
     <form method="post" @submit.prevent="submit">
-      <component ref="editor" :is="editor" v-model="text" :discussion="true" :canned="data.interact.canned"></component>
+      <editor ref="editor" v-model="text" :discussion="true" :canned="data.interact.canned"></editor>
       <p><input type="submit" value="Post"></p>
     </form>
   </div>
@@ -11,8 +11,8 @@
 
 <script>
 
-  import EditorVue from './Editor.vue';
-  import {Interaction} from '../Models/Interaction';
+import EditorVue from './Editor.vue';
+import {Interaction} from '../Models/Interaction';
 
   /**
    * A view window for new discussions on an interaction.
@@ -23,11 +23,11 @@
    */
   export default {
     props: ['data', 'interaction'],
+    emits: ['relaoded'],
     data: function () {
       return {
         text: '',
         mask: false,
-        editor: EditorVue,
         active: false,
         activeId: 0
       }
@@ -66,7 +66,8 @@
       }
     },
     components: {
-      maskVue: Site.MaskVue
+      maskVue: Site.MaskVue,
+      editor: EditorVue
     },
     mounted() {
       this.activeId = +this.interaction.id;
@@ -92,7 +93,9 @@
                     this.active = false;
                     this.$interact.setActive(null);
                     this.$refs.editor.reset();
+                    this.text = ''
                   } else {
+                    console.log('error')
                     this.$site.toast(this, response);
                   }
 

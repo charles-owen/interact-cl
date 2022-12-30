@@ -14,6 +14,7 @@
 
   export default {
     props: ['data'],
+    emits: ['interaction', 'cancel'],
     data: function () {
       return {
         mask: false
@@ -34,11 +35,13 @@
                     const interaction = response.getData('interaction').attributes;
                     this.$emit('interaction', interaction);
                   } else {
+                    console.log(data)
                     this.$site.toast(this, response);
                   }
 
                 })
                 .catch((error) => {
+                  console.log('error')
                   this.mask = false;
                   this.$site.toast(this, error);
                 });
