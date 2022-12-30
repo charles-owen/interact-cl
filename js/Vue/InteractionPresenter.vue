@@ -38,7 +38,7 @@
           this.fetch();
           this.$interact.presenter = this;
       },
-      beforeDestroy() {
+    beforeUnmount() {
       	  this.$interact.presenter = null;
       },
       methods: {

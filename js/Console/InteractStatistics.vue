@@ -58,7 +58,7 @@
             }
         },
         mounted() {
-            this.$parent.setTitle(': Interact Statistics');
+            this.$root.setTitle(': Interact Statistics');
 
             this.$site.api.get('/api/interact/statistics', {})
                 .then((response) => {

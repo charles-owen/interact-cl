@@ -77,7 +77,7 @@
 
 	      this.$interact.startPolling();
       },
-      beforeDestroy() {
+    beforeUnmount() {
         this.$interact.endPolling();
       },
       methods: {

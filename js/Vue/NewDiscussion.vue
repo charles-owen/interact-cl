@@ -71,7 +71,7 @@
     mounted() {
       this.activeId = +this.interaction.id;
     },
-    beforeDestroy() {
+    beforeUnmount() {
       this.$interact.setActive(null);
     },
     methods: {
