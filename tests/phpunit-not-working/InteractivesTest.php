@@ -12,7 +12,7 @@ use CL\Course\Member;
 use CL\Users\Users;
 use CL\Course\Test\DummyMember;
 
-class InterFollowsTest extends InteractDatabaseTestBase {
+class InteractivesTest extends InteractDatabaseTestBase {
 	/**
 	 * @return PHPUnit_Extensions_Database_DataSet_IDataSet
 	 */
