@@ -13,15 +13,15 @@
   "author": "Charles B. Owen",
   "license": "MIT",
   "dependencies": {
-    "@vue/compat": "^3.2.45",
+    "@vue/compat": "^3.3.4",
     "ckeditor5-cl": "~0.0.11",
     "console-cl": ">=0.0.1",
     "course-cl": ">=0.0.1",
     "dialog-cl": "^1.0.7",
-    "dompurify": "^2.4.1",
+    "dompurify": "^3.0.5",
     "site-cl": ">=0.0.1",
     "users-cl": ">=0.0.1",
-    "vue": "^3.2.45",
-    "vue-router": "^4.1.6"
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.4"
   }
 }

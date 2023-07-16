@@ -40,10 +40,14 @@ abstract class InteractContent {
 		        $message = $row["{$prefix}message"];
 
 		        // Data from the database may or may not be UTF-8 encoded.
-                // This tests if it is. If it is not, we encode it.
-		        if(utf8_encode(utf8_decode($message)) !== $message) {
-                    $message = utf8_encode($message);
+//                // This tests if it is. If it is not, we encode it.
+//		        if(utf8_encode(utf8_decode($message)) !== $message) {
+//                    $message = utf8_encode($message);
+//                }
+                if(mb_convert_encoding(mb_convert_encoding($message, 'ISO-8859-1', 'UTF-8'), 'UTF-8', 'ISO-8859-1') !== $message) {
+                    $message = mb_convert_encoding($message, 'UTF-8', 'ISO-8859-1');
                 }
+
 			    $this->message = $message;
 		    }
 
@@ -144,13 +148,15 @@ abstract class InteractContent {
 	 * @return string HTML/truncated
 	 */
 	public function summarize() {
-		$summary = strip_tags(utf8_decode($this->message));
+        //$summary = strip_tags(utf8_decode($this->message));
+        $summary = strip_tags(mb_convert_encoding($this->message, 'ISO-8859-1', 'UTF-8'));
 
 		// Since the data from the clients is UTF8, just truncating
 		// the string can lead to a broken multibyte character at
 		// the end, which breaks JSON encoding. This ensures that
 		// that cannot happen.
-		return utf8_encode(substr($summary, 0, self::SummarizeMax));
+        //return utf8_encode(substr($summary, 0, self::SummarizeMax));
+        return mb_convert_encoding(substr($summary, 0, self::SummarizeMax), 'UTF-8', 'ISO-8859-1');
 	}
 
 
