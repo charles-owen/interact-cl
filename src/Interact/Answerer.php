@@ -9,6 +9,7 @@ namespace CL\Interact;
 use CL\Site\Site;
 use CL\Users\User;
 use CL\Course\Members;
+use CL\Users\Users;
 
 /**
  * Automatic question answerer.
@@ -18,6 +19,7 @@ use CL\Course\Members;
  * user question based on regular expression analysis of questions.
  *
  * @property string answerer User id for autoanswer user or null if none
+ * @property Closure xinteractionHook Function to be called when a new interaction arrives
  */
 class Answerer {
 	/// User preferences key for autoanswer options.
@@ -45,7 +47,6 @@ class Answerer {
         }
     }
 
-
     /**
      * Property set magic method
      *
@@ -62,6 +63,14 @@ class Answerer {
 			    $this->answerer = $value;
 			    break;
 
+            case 'interactionHook':
+                $this->interactionHook = $value;
+                break;
+
+            case 'discussionHook':
+                $this->discussionHook = $value;
+                break;
+
     		default:
     			$trace = debug_backtrace();
     			trigger_error(
@@ -71,6 +80,56 @@ class Answerer {
     				E_USER_NOTICE);
     			break;
     	}
+    }
+
+    /**
+     * Post a new discussion onto an interaction
+     * @param CL\Site\System\Server $server A valid Server object
+     * @param int $time The time to stamp the response with
+     * @param CL\Interact\Interaction $interaction Interaction we are responding to
+     * @param string $text Text for the response
+     */
+    public function PostDiscussion($server, $time, $interaction, $text) {
+        if($this->answerer === null) {
+            return;
+        }
+
+        $site = $this->site;
+        $user = $this->user;
+
+        // Find the answering user
+        $users = new Users($site->db);
+        $answerUser = $users->getByUser($this->answerer);
+        if($answerUser !== null) {
+
+            // Find an associated membership for that user
+            $members = new Members($site->db);
+            $answerMember = $members->getBySection($answerUser->id,
+                $user->member->semester, $user->member->sectionId);
+            if($answerMember !== null) {
+                // We found the membership, post the answer
+                $answerUser->member = $answerMember;
+
+                $discussion = new Discussion();
+                $discussion->interactId = $interaction->id;
+                $discussion->user = $answerUser;
+                $discussion->time = $time;
+                $discussion->message = $text;
+
+                $discussions = new Discussions($site->db);
+                $discussions->add($discussion);
+
+                // Interaction time is set to the time of the discussion item
+                $interaction->time = $time;
+                $interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::ANSWERED);
+
+                $interacts = new Interacts($site->db);
+                $interacts->update($interaction);
+
+                $email = new InteractEmail($site, $user, $server->email);
+                $email->newDiscussion($interaction, $discussion);
+            }
+        }
     }
 
 
@@ -94,6 +153,14 @@ class Answerer {
 
 		    case "site":
 			    return $this->site;
+
+            case 'interactionHook':
+                return $this->interactionHook;
+                break;
+
+            case 'discussionHook':
+                return $this->discussionHook;
+                break;
 
     		default:
     			$trace = debug_backtrace();
@@ -250,4 +317,7 @@ class Answerer {
     /// User id for the user who is answering the questions
     /// Usually this is a fake user.
     private $answerer = null;
+
+    private $interactionHook = null;
+    private $discussionHook = null;
 }

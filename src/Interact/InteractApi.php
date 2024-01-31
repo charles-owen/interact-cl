@@ -380,8 +380,18 @@ class InteractApi extends \CL\Users\Api\Resource {
 		$email = new InteractEmail($site, $user, $server->email);
 		$email->newDiscussion($interaction, $discussion);
 
-		$json = new JsonAPI();
-		$json->addData('interaction', $interaction->id, $interaction->data($site, $user));
+        $json = new JsonAPI();
+        $json->addData('interaction', $interaction->id, $interaction->data($site, $user));
+
+        //
+        // Autoanswer system
+        //
+        $answerer = new Answerer($site, $user);
+        $hook = $answerer->discussionHook;
+        if($hook !== NULL) {
+            $hook($server, $interaction, $discussion, $time);
+        }
+
 		return $json;
 	}
 
@@ -543,7 +553,7 @@ class InteractApi extends \CL\Users\Api\Resource {
 				//
 				if($interaction->type === Interaction::QUESTION) {
 					// When we autoanswer, we create the response early
-					// so the answer does not appear immediately. Instead
+					// so the answer does not appear immediately. Instead,
 					// it appears on the next polling.
 					$json = new JsonAPI();
 					$json->addData('interaction', $interaction->id, $interaction->data($site, $user));
@@ -552,40 +562,50 @@ class InteractApi extends \CL\Users\Api\Resource {
 					// Autoanswer system
 					//
 					$answerer = new Answerer($site, $user);
+                    $hook = $answerer->interactionHook;
+                    if($hook !== NULL) {
+                        $hook($server, $interaction, $time);
+                    }
+
 					$answer = $answerer->lookup($interaction->message,
 						$interaction->assignTag, $interaction->sectionTag);
 					if($answer !== null) {
-						// Find the answering user
-						$users = new Users($site->db);
-						$answerUser = $users->getByUser($answerer->answerer);
-						if($answerUser !== null) {
-							// Find an associated membership for that user
-							$members = new Members($site->db);
-							$answerMember = $members->getBySection($answerUser->id,
-								$user->member->semester, $user->member->sectionId);
-							if($answerMember !== null) {
-								// We found the membership, post the answer
-								$answerUser->member = $answerMember;
+                        $answerer->PostDiscussion($server, $time + self::FUTURE_ANSWER,
+                                                    $interaction, $answer['text']);
 
-								$discussion = new Discussion();
-								$discussion->interactId = $interaction->id;
-								$discussion->user = $answerUser;
-								$discussion->time = $time + self::FUTURE_ANSWER;
-								$discussion->message = $answer['text'];
+                        // This code has been moved to Answerer so it can be reused.
 
-								$discussions = new Discussions($site->db);
-								$discussions->add($discussion);
-
-								// Interaction time is set to the time of the discussion item
-								$interaction->time = $time + self::FUTURE_ANSWER;
-								$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::ANSWERED);
-
-								$interacts->update($interaction);
-
-								$email = new InteractEmail($site, $user, $server->email);
-								$email->newDiscussion($interaction, $discussion);
-							}
-						}
+//						// Find the answering user
+//						$users = new Users($site->db);
+//						$answerUser = $users->getByUser($answerer->answerer);
+//						if($answerUser !== null) {
+//							// Find an associated membership for that user
+//							$members = new Members($site->db);
+//							$answerMember = $members->getBySection($answerUser->id,
+//								$user->member->semester, $user->member->sectionId);
+//							if($answerMember !== null) {
+//								// We found the membership, post the answer
+//								$answerUser->member = $answerMember;
+//
+//								$discussion = new Discussion();
+//								$discussion->interactId = $interaction->id;
+//								$discussion->user = $answerUser;
+//								$discussion->time = $time + self::FUTURE_ANSWER;
+//								$discussion->message = $answer['text'];
+//
+//								$discussions = new Discussions($site->db);
+//								$discussions->add($discussion);
+//
+//								// Interaction time is set to the time of the discussion item
+//								$interaction->time = $time + self::FUTURE_ANSWER;
+//								$interaction->meta->set("public", Interact::INTERACTION_STATE, Interaction::ANSWERED);
+//
+//								$interacts->update($interaction);
+//
+//								$email = new InteractEmail($site, $user, $server->email);
+//								$email->newDiscussion($interaction, $discussion);
+//							}
+//						}
 					}
 
 					return $json;
