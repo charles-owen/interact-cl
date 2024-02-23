@@ -23,7 +23,7 @@ import {Interaction} from '../Models/Interaction';
    */
   export default {
     props: ['data', 'interaction'],
-    emits: ['relaoded'],
+    emits: ['reloaded'],
     data: function () {
       return {
         text: '',
